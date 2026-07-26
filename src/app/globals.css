@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --vanilla-50: #F8F4EF;
+    --vanilla-100: #EFE6DD;
+    --vanilla-200: #E3D7CA;
+    --vanilla-300: #D2C3B2;
+    --vanilla-400: #B8A693;
+
+    --violet-900: #1E1223;
+    --violet-800: #321847;
+    --violet-600: #4E2E68;
+    --violet-200: #C9BDD4;
+    --violet-50: #F0EBF4;
+
+    --cherry-600: #9A0002;
+    --cherry-700: #6B0102;
+    --cherry-200: #E9C7C7;
+    --cherry-50: #F8EDED;
+
+    --ink: #2A1416;
+    --ink-muted: #6B5A50;
+    --admin-success: #2F5A1E;
+
+    --font-display: 'Instrument Serif', serif;
+    --font-body: 'Instrument Sans', sans-serif;
+  }
+
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--vanilla-100);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.1875rem; }
+  h4 { font-size: 1rem; }
+  h5 { font-size: 0.875rem; }
+  h6 { font-size: 0.75rem; }
+
+  p, span, li, td {
+    line-height: 1.6;
+  }
+
+  button, input, select, textarea {
+    font-family: var(--font-body);
+  }
+
+  a {
+    color: var(--cherry-600);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--cherry-700);
+    text-decoration: underline;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+  }
+
+  .btn-primary {
+    background-color: var(--cherry-600);
+    color: var(--vanilla-50);
+    border: none;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--cherry-700);
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--ink);
+    color: var(--vanilla-50);
+  }
+
+  .btn-text {
+    background-color: transparent;
+    color: var(--cherry-600);
+    border: none;
+    padding: 0;
+    font-weight: 600;
+  }
+
+  .btn-text:hover {
+    text-decoration: underline;
+  }
+
+  .card {
+    background-color: var(--vanilla-50);
+    border: 1px solid var(--vanilla-400);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0 8px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+
+  .badge-success {
+    background-color: var(--admin-success);
+    color: var(--vanilla-50);
+  }
+
+  .badge-warning {
+    background-color: var(--violet-800);
+    color: var(--vanilla-50);
+  }
+
+  .badge-error {
+    background-color: var(--cherry-700);
+    color: var(--vanilla-50);
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--cherry-600);
+  }
+}
