@@ -52,8 +52,8 @@ async function main() {
 
   const product = await prisma.product.create({
     data: {
-      name: 'Premium Bone Straight Wig',
-      slug: 'premium-bone-straight-wig',
+      name: 'YB Beauty Lounge Bone Straight Wig',
+      slug: 'yb-beauty-lounge-bone-straight-wig',
       description: 'Premium bone straight wig with natural shine and comfortable cap',
       texture: 'bone_straight',
       hair_origin: 'Brazilian',
