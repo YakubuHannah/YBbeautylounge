@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 
-type Asset = { id: string; url: string; filename: string; alt_text: string | null }
+type Asset = { id: string; url: string; filename: string; alt_text: string | null; mime_type: string }
 
 export default function AdminMediaPage() {
   const [assets, setAssets] = useState<Asset[]>([])
@@ -54,7 +54,7 @@ export default function AdminMediaPage() {
       )
       return
     }
-    setMessage('Image uploaded and saved.')
+    setMessage('Media uploaded and saved.')
     setPendingFile(null)
     setPreview(null)
     load()
@@ -67,7 +67,7 @@ export default function AdminMediaPage() {
     const res = await fetch('/api/admin/media', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url.trim(), alt_text: 'Product image' }),
+      body: JSON.stringify({ url: url.trim(), alt_text: 'Product media' }),
     })
     const data = await res.json()
     setUploading(false)
@@ -76,7 +76,7 @@ export default function AdminMediaPage() {
       return
     }
     setUrl('')
-    setMessage('Image URL saved. You can attach it on a product.')
+    setMessage('Media URL saved. You can attach it on a product.')
     load()
   }
 
@@ -85,21 +85,25 @@ export default function AdminMediaPage() {
       <div>
         <h1 className="font-display text-3xl text-ink">Media library</h1>
         <p className="mt-2 text-sm text-ink-muted">
-          Upload product photos here, preview them, then attach on the product edit screen.
+          Upload product photos or videos here, preview them, then attach on the product edit screen.
         </p>
       </div>
 
       <section className="space-y-4 border border-vanilla-400 bg-vanilla-50 p-6">
-        <h2 className="font-display text-xl">Upload a photo</h2>
-        <input type="file" accept="image/*,.heic,.heif" onChange={onFilePick} className="block w-full text-sm" />
+        <h2 className="font-display text-xl">Upload media</h2>
+        <input type="file" accept="image/*,.heic,.heif,video/mp4,video/quicktime,video/webm" onChange={onFilePick} className="block w-full text-sm" />
 
         {preview && (
           <div className="max-w-xs border border-vanilla-400 bg-vanilla-100 p-2">
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-violet-800">
               Preview before upload
             </p>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="Preview" className="aspect-[4/5] w-full object-cover" />
+            {pendingFile?.type.startsWith('video/') ? (
+              <video src={preview} className="aspect-[4/5] w-full object-cover" controls />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={preview} alt="Preview" className="aspect-[4/5] w-full object-cover" />
+            )}
             <Button
               type="button"
               variant="primary"
@@ -107,21 +111,25 @@ export default function AdminMediaPage() {
               loading={uploading}
               onClick={uploadFile}
             >
-              Save this photo
+              Save this media
             </Button>
           </div>
         )}
 
         <div className="border-t border-vanilla-400 pt-4">
-          <p className="text-sm font-semibold text-ink">Or paste an image link</p>
+          <p className="text-sm font-semibold text-ink">Or paste a media link</p>
           <p className="text-xs text-ink-muted">
             Works without Supabase upload setup (Instagram export link, Drive public link, etc.).
           </p>
           {url && (
             <div className="mt-3 max-w-xs border border-vanilla-400 p-2">
               <p className="mb-2 text-xs text-violet-800">URL preview</p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="URL preview" className="aspect-[4/5] w-full object-cover" />
+              {url.match(/\.(mp4|webm|mov|avi)$/i) ? (
+                <video src={url} className="aspect-[4/5] w-full object-cover" controls />
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={url} alt="URL preview" className="aspect-[4/5] w-full object-cover" />
+              )}
             </div>
           )}
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -163,25 +171,29 @@ export default function AdminMediaPage() {
           <li>
             Optional Vercel env: <code className="text-ink">SUPABASE_STORAGE_BUCKET=media</code>
           </li>
-          <li>Redeploy on Vercel, then try Choose file → Save this photo again.</li>
+          <li>Redeploy on Vercel, then try Choose file → Save this media again.</li>
         </ol>
-        <p className="mt-3">Until that is set, use “paste image URL” — photos still attach to products.</p>
+        <p className="mt-3">Until that is set, use "paste media URL" — photos and videos still attach to products.</p>
       </section>
 
       <section>
         <h2 className="font-display text-xl text-ink">Your library</h2>
         {assets.length === 0 ? (
-          <p className="mt-3 text-sm text-ink-muted">No images saved yet.</p>
+          <p className="mt-3 text-sm text-ink-muted">No media saved yet.</p>
         ) : (
           <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
             {assets.map((a) => (
               <div key={a.id} className="border border-vanilla-400 bg-vanilla-50 p-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={a.url}
-                  alt={a.alt_text || a.filename}
-                  className="aspect-[4/5] w-full object-cover"
-                />
+                {a.mime_type.startsWith('video/') ? (
+                  <video src={a.url} className="aspect-[4/5] w-full object-cover" controls />
+                ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={a.url}
+                    alt={a.alt_text || a.filename}
+                    className="aspect-[4/5] w-full object-cover"
+                  />
+                )}
                 <p className="mt-2 truncate text-xs text-ink-muted">{a.filename}</p>
               </div>
             ))}
