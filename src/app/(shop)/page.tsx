@@ -6,6 +6,13 @@ import { getActiveProducts } from '@/lib/products'
 
 export const dynamic = 'force-dynamic'
 
+const TEXTURE_TILES = [
+  { label: 'Bone straight', textures: ['bone_straight'] },
+  { label: 'Curly', textures: ['curly', 'kinky_curly'] },
+  { label: 'Wavy', textures: ['body_wave', 'deep_wave', 'water_wave'] },
+  { label: 'Bob', textures: ['bob'] },
+]
+
 export default async function HomePage() {
   const products = await getActiveProducts()
   const featured = products.filter((p) => p.featured).slice(0, 4)
@@ -80,15 +87,38 @@ export default async function HomePage() {
           </p>
           <h2 className="mt-2 font-display text-3xl text-ink">Find your finish</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {['Bone straight', 'Curly', 'Wavy', 'Bob'].map((t) => (
-              <Link
-                key={t}
-                href="/shop"
-                className="flex min-h-[140px] items-end bg-vanilla-50 p-6 no-underline hover:no-underline"
-              >
-                <span className="font-display text-2xl text-ink">{t}</span>
-              </Link>
-            ))}
+            {TEXTURE_TILES.map((t) => {
+              const image = products.find(
+                (p) => t.textures.includes(p.texture) && p.images[0]
+              )?.images[0]
+              return (
+                <Link
+                  key={t.label}
+                  href="/shop"
+                  className="group block overflow-hidden bg-vanilla-50 no-underline hover:no-underline"
+                >
+                  {image && (
+                    <div className="aspect-[16/9] overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={image.url}
+                        alt={image.alt_text || t.label}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <span
+                    className={
+                      image
+                        ? 'block p-6 font-display text-2xl text-ink group-hover:text-cherry-700'
+                        : 'flex min-h-[140px] items-end p-6 font-display text-2xl text-ink group-hover:text-cherry-700'
+                    }
+                  >
+                    {t.label}
+                  </span>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section>
