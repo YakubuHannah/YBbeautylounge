@@ -12,7 +12,7 @@ model Customer {
   phone_normalised      String   @unique
   phone_raw             String
   name                  String?
-  email                 String?  @index
+  email                 String?
   marketing_consent     Boolean  @default(false)
   consent_recorded_at   DateTime?
   store_credit_balance  Int      @default(0)
@@ -33,11 +33,16 @@ model Customer {
   referral_redemptions  ReferralRedemption[]
   store_credit_txns     StoreCreditTransaction[]
   consent_records       ConsentRecord[]
+  discount_redemptions  DiscountRedemption[]
+  search_queries        SearchQueryLog[]
+  abandoned_checkouts   AbandonedCheckout[]
+  waitlist_signups      WaitlistSignup[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
 
+  @@index([email])
   @@map("customers")
 }
 
@@ -97,6 +102,7 @@ model ProductVariant {
   is_active           Boolean  @default(true)
 
   product             Product  @relation(fields: [product_id], references: [id])
+  images              ProductImage[]
   order_items         OrderItem[]
   stock_reservations  StockReservation[]
   stock_adjustments   StockAdjustment[]
@@ -201,6 +207,10 @@ model Order {
   events              OrderEvent[]
   payments            Payment[]
   discount_redemptions DiscountRedemption[]
+  stock_reservations  StockReservation[]
+  reviews             Review[]
+  referral_redemptions ReferralRedemption[]
+  store_credit_txns   StoreCreditTransaction[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -422,7 +432,7 @@ model RestorationJob {
   customer_request         String?  @db.Text
   is_lagos                 Boolean  @default(true)
   status                   String   @default("enquiry")
-  service_tier_id          Int?     @map("service_tier_id")
+  service_tier_id          String?  @map("service_tier_id")
   quoted_amount            Int?
   quoted_turnaround_days   Int?
   quote_sent_at            DateTime?
@@ -436,6 +446,7 @@ model RestorationJob {
   internal_notes           String?  @db.Text
 
   customer            Customer? @relation(fields: [customer_id], references: [id])
+  service_tier        RestorationServiceTier? @relation(fields: [service_tier_id], references: [id])
   intake_images       RestorationIntakeImage[]
 
   createdAt DateTime @default(now())
@@ -484,6 +495,7 @@ model MediaAsset {
   folder          MediaFolder? @relation(fields: [folder_id], references: [id])
   product_images  ProductImage[]
   review_images   ReviewImage[]
+  restoration_intake_images RestorationIntakeImage[]
 
   createdAt DateTime @default(now())
 
