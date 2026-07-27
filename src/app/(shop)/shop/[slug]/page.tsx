@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import { ProductGallery } from '@/components/product/product-gallery'
 import { ProductPurchase } from '@/components/product/product-purchase'
+import { ReviewForm } from '@/components/product/review-form'
 import {
   getApprovedReviews,
   getProductBySlug,
@@ -87,7 +88,7 @@ export default async function ProductPage({
         <h2 className="font-display text-2xl text-ink">Reviews</h2>
         {product.review_count > 0 && (
           <p className="mt-2 text-sm text-ink-muted">
-            {product.avg_rating.toFixed(1)} average · {product.review_count} verified reviews
+            {product.avg_rating.toFixed(1)} average · {product.review_count} reviews
           </p>
         )}
         {reviews.length === 0 ? (
@@ -105,6 +106,7 @@ export default async function ProductPage({
             ))}
           </ul>
         )}
+        <ReviewForm productId={product.id} />
       </section>
     </main>
   )
