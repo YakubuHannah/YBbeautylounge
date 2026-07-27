@@ -18,65 +18,37 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  async function load() {
-    setLoading(true)
-    const res = await fetch('/api/admin/products')
-    const data = await res.json()
-    if (!res.ok) setError(data.error || 'Failed')
-    else setProducts(data.products || [])
-    setLoading(false)
-  }
-
   useEffect(() => {
-    load()
+    fetch('/api/admin/products')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) setError(data.error)
+        else setProducts(data.products || [])
+      })
+      .finally(() => setLoading(false))
   }, [])
-
-  async function createQuick() {
-    const name = window.prompt('Product name')
-    if (!name) return
-    const price = window.prompt('Starting price in naira (e.g. 185000)', '185000')
-    const res = await fetch('/api/admin/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        status: 'draft',
-        texture: 'bone_straight',
-        variants: [
-          {
-            sku: `${name.slice(0, 8)}-16`.replace(/\s/g, ''),
-            length_inches: 16,
-            colorway: 'Natural black',
-            density_percent: 150,
-            price: Number(price || 185000),
-            cost_price: 85000,
-            stock_quantity: 5,
-          },
-        ],
-      }),
-    })
-    if (res.ok) load()
-    else {
-      const d = await res.json()
-      alert(d.error || 'Create failed')
-    }
-  }
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl text-ink">Products</h1>
-          <p className="mt-1 text-sm text-ink-muted">Set names, prices (naira), stock, and images.</p>
+          <p className="mt-1 text-sm text-ink-muted">
+            Create a product, set prices and stock, then attach photos.
+          </p>
         </div>
-        <Button type="button" variant="primary" onClick={createQuick}>
-          New product
-        </Button>
+        <Link href="/admin/products/new">
+          <Button type="button" variant="primary">
+            New product
+          </Button>
+        </Link>
       </div>
 
       {error && <p className="mt-4 text-cherry-700">{error}</p>}
       {loading ? (
         <p className="mt-8 text-ink-muted">Loading…</p>
+      ) : products.length === 0 ? (
+        <p className="mt-8 text-ink-muted">No products yet. Create your first one.</p>
       ) : (
         <div className="mt-8 overflow-x-auto border border-vanilla-400">
           <table className="w-full text-left text-sm">
@@ -84,8 +56,8 @@ export default function AdminProductsPage() {
               <tr>
                 <th className="p-3">Name</th>
                 <th className="p-3">Status</th>
-                <th className="p-3">From</th>
-                <th className="p-3">Stock</th>
+                <th className="p-3">From price</th>
+                <th className="p-3">Total stock</th>
                 <th className="p-3" />
               </tr>
             </thead>
@@ -96,13 +68,13 @@ export default function AdminProductsPage() {
                   : 0
                 const stock = p.variants.reduce((n, v) => n + v.stock_quantity, 0)
                 return (
-                  <tr key={p.id} className="border-t border-vanilla-400">
+                  <tr key={p.id} className="border-t border-vanilla-400 bg-vanilla-50">
                     <td className="p-3 font-medium">{p.name}</td>
-                    <td className="p-3">{p.status}</td>
+                    <td className="p-3 capitalize">{p.status}</td>
                     <td className="p-3 tabular-nums">{formatNaira(min)}</td>
                     <td className="p-3">{stock}</td>
                     <td className="p-3 text-right">
-                      <Link href={`/admin/products/${p.id}`} className="text-cherry-600">
+                      <Link href={`/admin/products/${p.id}`} className="font-semibold text-cherry-600">
                         Edit
                       </Link>
                     </td>

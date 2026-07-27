@@ -60,6 +60,19 @@ export async function POST(req: Request) {
   if (!body.name?.trim()) {
     return NextResponse.json({ error: 'Name required' }, { status: 400 })
   }
+  if (!body.texture?.trim()) {
+    return NextResponse.json({ error: 'Texture required' }, { status: 400 })
+  }
+
+  const variantInput = (body.variants || []).filter(
+    (v) => v && (v.price != null || v.sku || v.length_inches)
+  )
+  if (!variantInput.length) {
+    return NextResponse.json(
+      { error: 'Add at least one size/price option with a sell price' },
+      { status: 400 }
+    )
+  }
 
   let slug = slugify(body.name)
   const existing = await prisma.product.findUnique({ where: { slug } })
@@ -70,36 +83,24 @@ export async function POST(req: Request) {
       name: body.name.trim(),
       slug,
       description: body.description || null,
-      texture: body.texture || 'bone_straight',
+      texture: body.texture.trim(),
       hair_origin: body.hair_origin || null,
       care_instructions: body.care_instructions || null,
       status: body.status === 'active' ? 'active' : 'draft',
       featured: Boolean(body.featured),
       published_at: body.status === 'active' ? new Date() : null,
       variants: {
-        create: (body.variants?.length
-          ? body.variants
-          : [
-              {
-                sku: `${slug}-default`.slice(0, 40),
-                length_inches: 16,
-                colorway: 'Natural black',
-                density_percent: 150,
-                price: 18500000,
-                cost_price: 8500000,
-                stock_quantity: 5,
-              },
-            ]
-        ).map((v, i) => ({
-          sku: v.sku || `${slug}-${i + 1}`.slice(0, 40),
+        create: variantInput.map((v, i) => ({
+          sku: (v.sku || `${slug}-${i + 1}`).slice(0, 40),
           length_inches: v.length_inches ?? null,
           colorway: v.colorway ?? null,
           density_percent: v.density_percent ?? null,
-          draw_type: v.draw_type ?? 'double_drawn',
-          // price input from admin UI expected in naira whole numbers → store kobo
+          draw_type: v.draw_type ?? null,
           price: Math.round(Number(v.price ?? 0) * 100),
           cost_price:
-            v.cost_price != null ? Math.round(Number(v.cost_price) * 100) : null,
+            v.cost_price != null && v.cost_price !== undefined
+              ? Math.round(Number(v.cost_price) * 100)
+              : null,
           stock_quantity: Number(v.stock_quantity ?? 0),
           weight_grams: v.weight_grams ?? null,
           is_active: true,
