@@ -1,5 +1,6 @@
-import type { ButtonSize, ButtonVariant } from '@/types'
 import { forwardRef } from 'react'
+
+import type { ButtonSize, ButtonVariant } from '@/types'
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant

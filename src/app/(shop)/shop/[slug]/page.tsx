@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+
 import { ProductPurchase } from '@/components/product/product-purchase'
 import {
   getApprovedReviews,

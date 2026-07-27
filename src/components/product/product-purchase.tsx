@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/components/cart/cart-provider'
 import { formatNaira } from '@/lib/money'
@@ -66,9 +67,9 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
       </div>
 
       <div className="space-y-3">
-        <label className="block text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+        <p className="block text-[11px] font-semibold uppercase tracking-widest text-violet-800">
           Length & colorway
-        </label>
+        </p>
         <div className="flex flex-wrap gap-2">
           {product.variants.map((v) => {
             const active = v.id === variant.id
@@ -100,10 +101,11 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <label className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+        <label htmlFor="purchase-qty" className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
           Qty
         </label>
         <input
+          id="purchase-qty"
           type="number"
           min={1}
           max={Math.max(1, variant.stock_quantity)}

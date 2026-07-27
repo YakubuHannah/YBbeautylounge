@@ -1,4 +1,5 @@
 import Link from 'next/link'
+
 import { formatNaira } from '@/lib/money'
 import { minPrice, textureLabel, type PublicProduct } from '@/lib/products'
 

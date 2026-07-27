@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/components/cart/cart-provider'
 import { formatNaira } from '@/lib/money'

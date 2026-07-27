@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
+
 import { getAdminSession } from '@/lib/auth/admin-session'
+
 import { AdminShell } from '../_components/admin-shell'
 
 export default async function ProtectedAdminLayout({

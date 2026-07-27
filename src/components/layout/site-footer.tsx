@@ -1,4 +1,5 @@
 import Link from 'next/link'
+
 import { whatsAppUrl } from '@/lib/whatsapp'
 
 export function SiteFooter() {

@@ -1,5 +1,6 @@
-import type { BadgeProps, BadgeVariant } from '@/types'
 import { forwardRef } from 'react'
+
+import type { BadgeProps, BadgeVariant } from '@/types'
 
 const variantClasses: Record<BadgeVariant, string> = {
   success: 'bg-admin-success text-vanilla-50',

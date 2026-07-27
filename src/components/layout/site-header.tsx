@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+
 import { useCart } from '@/components/cart/cart-provider'
 
 const nav = [

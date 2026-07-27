@@ -1,5 +1,6 @@
-import type { CardProps } from '@/types'
 import { forwardRef } from 'react'
+
+import type { CardProps } from '@/types'
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = 'default', ...props }, ref) => {
