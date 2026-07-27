@@ -7,6 +7,7 @@ import { useCart } from '@/components/cart/cart-provider'
 
 const nav = [
   { href: '/shop', label: 'Shop' },
+  { href: '/find-my-fit', label: 'Find my fit' },
   { href: '/length-guide', label: 'Length guide' },
   { href: '/restoration', label: 'Wig revamp' },
   { href: '/reviews', label: 'Reviews' },
