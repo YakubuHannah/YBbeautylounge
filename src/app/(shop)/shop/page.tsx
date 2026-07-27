@@ -34,7 +34,7 @@ export default async function ShopPage() {
       {products.length === 0 ? (
         <p className="mt-12 text-ink-muted">No products published yet.</p>
       ) : (
-        <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3 md:gap-8 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-3">
           {products.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

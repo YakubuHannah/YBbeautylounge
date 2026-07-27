@@ -9,7 +9,7 @@ export function SiteFooter() {
         <div>
           <p className="font-display text-2xl">YBBEAUTYLOUNGE</p>
           <p className="mt-3 max-w-xs text-sm text-violet-200">
-            Premium wigs and thoughtful restoration. Calm, considered hair.
+            Human hair wigs, made for one head. Restoration by hand.
           </p>
         </div>
         <div>
@@ -74,7 +74,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-vanilla-400/30 px-5 py-4 text-center text-xs text-violet-200 md:px-12">
-        © {new Date().getFullYear()} YBBeautylounge · Wig revamp & restoration
+        © {new Date().getFullYear()} YBBeautylounge · Wig revamp and restoration
       </div>
     </footer>
   )

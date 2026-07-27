@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
+import { ProductGallery } from '@/components/product/product-gallery'
 import { ProductPurchase } from '@/components/product/product-purchase'
 import {
   getApprovedReviews,
@@ -33,32 +34,7 @@ export default async function ProductPage({
       </nav>
 
       <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr]">
-        <div className="space-y-3">
-          <div className="aspect-[4/5] overflow-hidden bg-vanilla-50">
-            {images[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={images[0].url}
-                alt={images[0].alt_text || product.name}
-                className="h-full w-full object-cover"
-              />
-            ) : null}
-          </div>
-          <div className="grid grid-cols-4 gap-2">
-            {(images.length ? images.slice(0, 4) : [null, null, null, null]).map((img, i) => (
-              <div key={img?.id || i} className="aspect-square overflow-hidden bg-vanilla-50">
-                {img ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={img.url}
-                    alt={img.alt_text || product.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </div>
+        <ProductGallery images={images} name={product.name} />
 
         <div className="lg:sticky lg:top-24 lg:self-start">
           <ProductPurchase product={product} />

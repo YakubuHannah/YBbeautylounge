@@ -15,7 +15,7 @@ export function ProductCard({ product }: { product: PublicProduct }) {
       href={`/shop/${product.slug}`}
       className="group block no-underline hover:no-underline"
     >
-      <div className="aspect-[4/5] overflow-hidden bg-vanilla-50">
+      <div className="aspect-square overflow-hidden bg-vanilla-50">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -29,7 +29,7 @@ export function ProductCard({ product }: { product: PublicProduct }) {
         <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
           {textureLabel(product.texture)}
         </p>
-        <h3 className="font-display text-lg text-ink group-hover:text-cherry-700">
+        <h3 className="min-h-[3.5rem] font-display text-lg text-ink group-hover:text-cherry-700">
           {product.name}
         </h3>
         {price != null && (
