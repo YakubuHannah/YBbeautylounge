@@ -119,6 +119,8 @@ model ProductImage {
   variant_id  String?  @map("variant_id")
   media_asset_id String @map("media_asset_id")
   sort_order  Int      @default(0)
+  display_name String?
+  alt_text    String?
 
   product     Product   @relation(fields: [product_id], references: [id])
   variant     ProductVariant? @relation(fields: [variant_id], references: [id])

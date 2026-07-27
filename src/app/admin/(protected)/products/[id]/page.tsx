@@ -19,7 +19,15 @@ type Variant = {
   is_active: boolean
 }
 
-type Media = { id: string; url: string; filename: string }
+type MediaAsset = { id: string; url: string; filename: string; mime_type: string }
+
+type ProductImage = {
+  id: string
+  media_asset: MediaAsset
+  sort_order: number
+  display_name: string | null
+  alt_text: string | null
+}
 
 function Field({
   label,
@@ -51,8 +59,10 @@ export default function AdminProductEditPage() {
   const [status, setStatus] = useState('draft')
   const [featured, setFeatured] = useState(false)
   const [variants, setVariants] = useState<Variant[]>([])
-  const [media, setMedia] = useState<Media[]>([])
+  const [media, setMedia] = useState<MediaAsset[]>([])
   const [selectedMedia, setSelectedMedia] = useState<string[]>([])
+  const [productImages, setProductImages] = useState<ProductImage[]>([])
+  const [imageMetadata, setImageMetadata] = useState<Record<string, { display_name: string; alt_text: string }>>({})
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -111,6 +121,14 @@ export default function AdminProductEditPage() {
         (p.images || []).map((img: { media_asset_id: string }) => img.media_asset_id)
       )
       setMedia(mData.assets || [])
+      const images = p.images || []
+      setProductImages(images)
+      images.forEach((img: ProductImage) => {
+        imageMetadata[img.id] = {
+          display_name: img.display_name || '',
+          alt_text: img.alt_text || '',
+        }
+      })
       setLoading(false)
     }
     load()
@@ -118,6 +136,32 @@ export default function AdminProductEditPage() {
 
   function updateVariant(i: number, patch: Partial<Variant>) {
     setVariants((prev) => prev.map((v, idx) => (idx === i ? { ...v, ...patch } : v)))
+  }
+
+  function updateImageMetadata(imageId: string, field: 'display_name' | 'alt_text', value: string) {
+    setImageMetadata((prev) => ({
+      ...prev,
+      [imageId]: {
+        ...prev[imageId],
+        [field]: value,
+      },
+    }))
+  }
+
+  async function saveImageMetadata(imageId: string) {
+    const res = await fetch(`/api/admin/products/${id}/images`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product_id: id,
+        image_id: imageId,
+        ...imageMetadata[imageId],
+      }),
+    })
+    if (!res.ok) {
+      const data = await res.json()
+      setError(data.error || 'Failed to save image metadata')
+    }
   }
 
   async function save() {
@@ -167,6 +211,9 @@ export default function AdminProductEditPage() {
   }
 
   if (loading) return <p className="text-ink-muted">Loading product…</p>
+
+  const hasImagesToPublish = status === 'active' && selectedMedia.length > 0
+  const hasEmptyAltText = hasImagesToPublish && Object.values(imageMetadata).some(m => !m.alt_text?.trim())
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -224,6 +271,11 @@ export default function AdminProductEditPage() {
           <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} />
           Feature on homepage
         </label>
+        {hasEmptyAltText && (
+          <p className="text-sm text-cherry-700">
+            All images must have alt text before publishing.
+          </p>
+        )}
       </section>
 
       <section className="space-y-4 border border-vanilla-400 bg-vanilla-50 p-6">
@@ -349,21 +401,49 @@ export default function AdminProductEditPage() {
             {media.map((m) => {
               const on = selectedMedia.includes(m.id)
               const order = on ? selectedMedia.indexOf(m.id) + 1 : null
+              const img = productImages.find(i => i.media_asset_id === m.id)
               return (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => toggleMedia(m.id)}
-                  className={`relative overflow-hidden border-2 bg-vanilla-50 text-left ${
-                    on ? 'border-cherry-600' : 'border-vanilla-400'
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={m.url} alt={m.filename} className="aspect-[4/5] w-full object-cover" />
-                  <span className="block truncate px-2 py-2 text-xs text-ink-muted">
-                    {on ? `Selected · #${order}` : 'Tap to attach'}
-                  </span>
-                </button>
+                <div key={m.id} className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleMedia(m.id)}
+                    className={`relative overflow-hidden border-2 bg-vanilla-50 text-left w-full ${
+                      on ? 'border-cherry-600' : 'border-vanilla-400'
+                    }`}
+                  >
+                    {m.mime_type.startsWith('video/') ? (
+                      <video src={m.url} className="aspect-[4/5] w-full object-cover" controls />
+                    ) : (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={m.url} alt={m.filename} className="aspect-[4/5] w-full object-cover" />
+                    )}
+                    <span className="block truncate px-2 py-2 text-xs text-ink-muted">
+                      {on ? `Selected · #${order}` : 'Tap to attach'}
+                    </span>
+                  </button>
+                  {on && img && (
+                    <div className="space-y-2 px-2">
+                      <Field label="Display name">
+                        <input
+                          className={inputClass}
+                          value={imageMetadata[img.id]?.display_name || ''}
+                          onChange={(e) => updateImageMetadata(img.id, 'display_name', e.target.value)}
+                          onBlur={() => saveImageMetadata(img.id)}
+                          placeholder="e.g. bone-straight-signature-22in"
+                        />
+                      </Field>
+                      <Field label="Alt text" help="Required for accessibility and SEO">
+                        <input
+                          className={inputClass}
+                          value={imageMetadata[img.id]?.alt_text || ''}
+                          onChange={(e) => updateImageMetadata(img.id, 'alt_text', e.target.value)}
+                          onBlur={() => saveImageMetadata(img.id)}
+                          placeholder="Bone Straight Signature wig, 22 inches, natural black, front view"
+                        />
+                      </Field>
+                    </div>
+                  )}
+                </div>
               )
             })}
           </div>

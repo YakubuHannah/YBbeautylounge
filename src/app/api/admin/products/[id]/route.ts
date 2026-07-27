@@ -60,6 +60,16 @@ export async function PATCH(
   const existing = await prisma.product.findUnique({ where: { id: params.id } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+  if (body.status === 'active') {
+    const images = await prisma.productImage.findMany({ where: { product_id: params.id } })
+    if (images.length > 0) {
+      const hasEmptyAlt = images.some(img => !img.alt_text?.trim())
+      if (hasEmptyAlt) {
+        return NextResponse.json({ error: 'All product images must have alt text before publishing.' }, { status: 400 })
+      }
+    }
+  }
+
   await prisma.$transaction(async (tx) => {
     await tx.product.update({
       where: { id: params.id },
@@ -111,13 +121,20 @@ export async function PATCH(
     if (body.media_asset_ids) {
       await tx.productImage.deleteMany({ where: { product_id: params.id } })
       if (body.media_asset_ids.length) {
-        await tx.productImage.createMany({
-          data: body.media_asset_ids.map((media_asset_id, sort_order) => ({
+        const productName = body.name || existing.name
+        const imageData = body.media_asset_ids.map((media_asset_id, idx) => {
+          const position = idx + 1
+          const displayName = `${productName.toLowerCase().replace(/\s+/g, '-')}-${position}`
+          const altText = `${productName}, image ${position} of ${body.media_asset_ids.length}`
+          return {
             product_id: params.id,
             media_asset_id,
-            sort_order,
-          })),
+            sort_order: idx,
+            display_name: displayName,
+            alt_text: altText,
+          }
         })
+        await tx.productImage.createMany({ data: imageData })
       }
     }
   })
