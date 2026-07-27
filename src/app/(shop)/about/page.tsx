@@ -36,7 +36,7 @@ export default function AboutPage() {
       
       <h1 className="mt-2 font-display text-4xl text-ink">She Wears the Crown</h1>
       
-      <div className="mt-8 space-y-12 text-ink-muted">
+      <div className="mt-8 space-y-8 text-ink-muted">
         <section className="grid gap-8 md:grid-cols-2 items-start">
           <div className="space-y-4">
             <p className="text-lg leading-relaxed">
@@ -53,7 +53,7 @@ export default function AboutPage() {
             </p>
           </div>
           {!loading && images[0] && (
-            <div className="relative aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[2px] border border-vanilla-400">
+            <div className="relative aspect-[4/5] w-full max-w-xs overflow-hidden rounded-[2px] border border-vanilla-400">
               <img 
                 src={images[0].url} 
                 alt={images[0].filename}
@@ -63,7 +63,7 @@ export default function AboutPage() {
           )}
         </section>
 
-        <section className="border-t border-vanilla-400 pt-12">
+        <section>
           <h2 className="font-display text-2xl text-ink">What we make</h2>
           <p className="mt-4 text-lg leading-relaxed">
             At YBBeautylounge, it is never just business as usual.
@@ -83,7 +83,7 @@ export default function AboutPage() {
             </p>
           </div>
           {!loading && images[1] && (
-            <div className="relative aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[2px] border border-vanilla-400">
+            <div className="relative aspect-[4/5] w-full max-w-xs overflow-hidden rounded-[2px] border border-vanilla-400">
               <img 
                 src={images[1].url} 
                 alt={images[1].filename}
@@ -93,7 +93,7 @@ export default function AboutPage() {
           )}
         </section>
 
-        <section className="border-t border-vanilla-400 pt-12">
+        <section>
           <h2 className="font-display text-2xl text-ink">The woman this is for</h2>
           <p className="mt-4 text-lg leading-relaxed">
             The YBBeautylounge woman is ever evolving. Beautiful, warm, graceful, yet strong, intelligent and confident.
@@ -106,7 +106,7 @@ export default function AboutPage() {
           </p>
         </section>
 
-        <section className="border-t border-vanilla-400 pt-12">
+        <section>
           <h2 className="font-display text-2xl text-ink">Nothing here is disposable</h2>
           <p className="mt-4 text-lg leading-relaxed">
             YBBeautylounge exists to honour that sacred space between a woman and her crown.
