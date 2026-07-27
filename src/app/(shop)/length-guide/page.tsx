@@ -21,8 +21,14 @@ export default function LengthGuidePage() {
         you’re between sizes.
       </p>
 
-      <div className="mt-10 aspect-[3/2] bg-vanilla-200" />
-      <p className="mt-2 text-xs text-ink-muted">Length reference photography lands before launch.</p>
+      <div className="mt-10 overflow-hidden bg-vanilla-50">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/length-guide.jpg"
+          alt="Bone straight unit on a mannequin, showing how the length falls"
+          className="h-auto w-full"
+        />
+      </div>
 
       <table className="mt-12 w-full text-left text-sm">
         <thead>
