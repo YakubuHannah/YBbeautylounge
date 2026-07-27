@@ -7,13 +7,23 @@ export function ProductCard({ product }: { product: PublicProduct }) {
   const lowStock = product.variants.some(
     (v) => v.stock_quantity > 0 && v.stock_quantity <= 2
   )
+  const image = product.images[0]
 
   return (
     <Link
       href={`/shop/${product.slug}`}
       className="group block no-underline hover:no-underline"
     >
-      <div className="aspect-[4/5] bg-vanilla-50" />
+      <div className="aspect-[4/5] overflow-hidden bg-vanilla-50">
+        {image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image.url}
+            alt={image.alt_text || product.name}
+            className="h-full w-full object-cover"
+          />
+        ) : null}
+      </div>
       <div className="mt-3 space-y-1">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
           {textureLabel(product.texture)}
@@ -24,6 +34,11 @@ export function ProductCard({ product }: { product: PublicProduct }) {
         {price != null && (
           <p className="text-base font-semibold tabular-nums text-cherry-600">
             {formatNaira(price)}
+          </p>
+        )}
+        {product.review_count > 0 && (
+          <p className="text-xs text-ink-muted">
+            {product.avg_rating.toFixed(1)} · {product.review_count} reviews
           </p>
         )}
         {lowStock && (

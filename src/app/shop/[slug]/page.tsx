@@ -1,7 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ProductPurchase } from '@/components/product/product-purchase'
-import { getProductBySlug, textureLabel } from '@/lib/products'
+import {
+  getApprovedReviews,
+  getProductBySlug,
+  textureLabel,
+} from '@/lib/products'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +18,8 @@ export default async function ProductPage({
   if (!product) notFound()
 
   const v = product.variants[0]
+  const reviews = await getApprovedReviews(product.id)
+  const images = product.images
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-8 md:px-12 md:py-12">
@@ -27,10 +33,28 @@ export default async function ProductPage({
 
       <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr]">
         <div className="space-y-3">
-          <div className="aspect-[4/5] bg-vanilla-50" />
+          <div className="aspect-[4/5] overflow-hidden bg-vanilla-50">
+            {images[0] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={images[0].url}
+                alt={images[0].alt_text || product.name}
+                className="h-full w-full object-cover"
+              />
+            ) : null}
+          </div>
           <div className="grid grid-cols-4 gap-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-square bg-vanilla-50" />
+            {(images.length ? images.slice(0, 4) : [null, null, null, null]).map((img, i) => (
+              <div key={img?.id || i} className="aspect-square overflow-hidden bg-vanilla-50">
+                {img ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={img.url}
+                    alt={img.alt_text || product.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : null}
+              </div>
             ))}
           </div>
         </div>
@@ -80,6 +104,30 @@ export default async function ProductPage({
             Not sure about length? See the length guide
           </Link>
         </p>
+      </section>
+
+      <section className="mt-16 border-t border-vanilla-400 pt-12">
+        <h2 className="font-display text-2xl text-ink">Reviews</h2>
+        {product.review_count > 0 && (
+          <p className="mt-2 text-sm text-ink-muted">
+            {product.avg_rating.toFixed(1)} average · {product.review_count} verified reviews
+          </p>
+        )}
+        {reviews.length === 0 ? (
+          <p className="mt-6 text-ink-muted">No approved reviews yet.</p>
+        ) : (
+          <ul className="mt-8 space-y-6">
+            {reviews.map((r) => (
+              <li key={r.id} className="border-b border-vanilla-400 pb-6">
+                <p className="text-sm font-semibold text-ink">
+                  {r.rating}/5 · {r.display_name}
+                </p>
+                {r.title && <p className="mt-1 font-medium">{r.title}</p>}
+                {r.body && <p className="mt-2 text-ink-muted">{r.body}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   )

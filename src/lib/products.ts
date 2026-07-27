@@ -18,6 +18,13 @@ export type PublicVariant = {
   is_active: boolean
 }
 
+export type PublicImage = {
+  id: string
+  url: string
+  alt_text: string | null
+  sort_order: number
+}
+
 export type PublicProduct = {
   id: string
   name: string
@@ -30,6 +37,7 @@ export type PublicProduct = {
   review_count: number
   featured: boolean
   variants: PublicVariant[]
+  images: PublicImage[]
 }
 
 function serialiseVariant(v: {
@@ -66,31 +74,64 @@ function serialiseVariant(v: {
   }
 }
 
+const productInclude = {
+  variants: {
+    where: { is_active: true },
+    orderBy: { length_inches: 'asc' as const },
+  },
+  images: {
+    orderBy: { sort_order: 'asc' as const },
+    include: { media_asset: true },
+  },
+}
+
+function mapProduct(p: {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  texture: string
+  hair_origin: string | null
+  care_instructions: string | null
+  avg_rating: number
+  review_count: number
+  featured: boolean
+  variants: Parameters<typeof serialiseVariant>[0][]
+  images: {
+    id: string
+    sort_order: number
+    media_asset: { url: string; alt_text: string | null }
+  }[]
+}): PublicProduct {
+  return {
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    description: p.description,
+    texture: p.texture,
+    hair_origin: p.hair_origin,
+    care_instructions: p.care_instructions,
+    avg_rating: p.avg_rating,
+    review_count: p.review_count,
+    featured: p.featured,
+    variants: p.variants.map(serialiseVariant),
+    images: p.images.map((img) => ({
+      id: img.id,
+      url: img.media_asset.url,
+      alt_text: img.media_asset.alt_text,
+      sort_order: img.sort_order,
+    })),
+  }
+}
+
 export async function getActiveProducts(): Promise<PublicProduct[]> {
   try {
     const rows = await prisma.product.findMany({
       where: { status: 'active', deleted_at: null },
       orderBy: { createdAt: 'desc' },
-      include: {
-        variants: {
-          where: { is_active: true },
-          orderBy: { length_inches: 'asc' },
-        },
-      },
+      include: productInclude,
     })
-    return rows.map((p) => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      description: p.description,
-      texture: p.texture,
-      hair_origin: p.hair_origin,
-      care_instructions: p.care_instructions,
-      avg_rating: p.avg_rating,
-      review_count: p.review_count,
-      featured: p.featured,
-      variants: p.variants.map(serialiseVariant),
-    }))
+    return rows.map(mapProduct)
   } catch {
     return []
   }
@@ -100,29 +141,32 @@ export async function getProductBySlug(slug: string): Promise<PublicProduct | nu
   try {
     const p = await prisma.product.findFirst({
       where: { slug, status: 'active', deleted_at: null },
-      include: {
-        variants: {
-          where: { is_active: true },
-          orderBy: { length_inches: 'asc' },
-        },
-      },
+      include: productInclude,
     })
     if (!p) return null
-    return {
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      description: p.description,
-      texture: p.texture,
-      hair_origin: p.hair_origin,
-      care_instructions: p.care_instructions,
-      avg_rating: p.avg_rating,
-      review_count: p.review_count,
-      featured: p.featured,
-      variants: p.variants.map(serialiseVariant),
-    }
+    return mapProduct(p)
   } catch {
     return null
+  }
+}
+
+export async function getApprovedReviews(productId: string) {
+  try {
+    return await prisma.review.findMany({
+      where: { product_id: productId, status: 'approved', rating: { gt: 0 } },
+      orderBy: [{ is_featured: 'desc' }, { createdAt: 'desc' }],
+      take: 20,
+      select: {
+        id: true,
+        rating: true,
+        title: true,
+        body: true,
+        display_name: true,
+        createdAt: true,
+      },
+    })
+  } catch {
+    return []
   }
 }
 
