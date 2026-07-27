@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import { Button } from '@/components/ui/button'
 
 type Asset = { id: string; url: string; filename: string; alt_text: string | null; mime_type: string }
@@ -147,33 +148,6 @@ export default function AdminMediaPage() {
 
         {message && <p className="text-sm text-ink">{message}</p>}
         {error && <p className="text-sm text-cherry-700">{error}</p>}
-      </section>
-
-      <section className="border border-vanilla-400 bg-vanilla-50 p-6 text-sm text-ink-muted">
-        <h2 className="font-display text-xl text-ink">Enable direct file uploads (Supabase)</h2>
-        <ol className="mt-3 list-decimal space-y-2 pl-5">
-          <li>
-            Open your Supabase project → <strong className="text-ink">Project Settings</strong> →{' '}
-            <strong className="text-ink">API</strong>
-          </li>
-          <li>
-            Copy <strong className="text-ink">Project URL</strong> → paste in Vercel as{' '}
-            <code className="text-ink">NEXT_PUBLIC_SUPABASE_URL</code>
-          </li>
-          <li>
-            Copy <strong className="text-ink">service_role</strong> key (secret) → Vercel as{' '}
-            <code className="text-ink">SUPABASE_SERVICE_ROLE_KEY</code>
-          </li>
-          <li>
-            Supabase → <strong className="text-ink">Storage</strong> → New bucket named{' '}
-            <code className="text-ink">media</code> → set <strong className="text-ink">Public</strong>
-          </li>
-          <li>
-            Optional Vercel env: <code className="text-ink">SUPABASE_STORAGE_BUCKET=media</code>
-          </li>
-          <li>Redeploy on Vercel, then try Choose file → Save this media again.</li>
-        </ol>
-        <p className="mt-3">Until that is set, use "paste media URL" — photos and videos still attach to products.</p>
       </section>
 
       <section>
