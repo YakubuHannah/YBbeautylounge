@@ -12,7 +12,7 @@ export default function RestorationPage() {
           <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-200">
             Service
           </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl">Restoration & revamp</h1>
+          <h1 className="mt-3 font-display text-4xl md:text-5xl">Wig revamp</h1>
           <p className="mx-auto mt-4 max-w-lg text-violet-200">
             Capacity-bound work by the founder’s hands — quoted clearly, deposited through the
             same order system, tracked without chasing.
