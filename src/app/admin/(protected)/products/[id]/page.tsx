@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+
 import { Button } from '@/components/ui/button'
 
 type Variant = {
@@ -23,7 +24,6 @@ type MediaAsset = { id: string; url: string; filename: string; mime_type: string
 
 type ProductImage = {
   id: string
-  media_asset_id: string
   media_asset: MediaAsset
   sort_order: number
   display_name: string | null
@@ -402,7 +402,7 @@ export default function AdminProductEditPage() {
             {media.map((m) => {
               const on = selectedMedia.includes(m.id)
               const order = on ? selectedMedia.indexOf(m.id) + 1 : null
-              const img = productImages.find(i => i.media_asset_id === m.id)
+              const img = productImages.find(i => i.media_asset.id === m.id)
               return (
                 <div key={m.id} className="space-y-2">
                   <button
