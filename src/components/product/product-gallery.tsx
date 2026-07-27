@@ -24,6 +24,7 @@ export function ProductGallery({ images, name }: { images: PublicImage[]; name: 
               src={image.url}
               alt={image.alt_text || name}
               className="h-full w-full object-cover"
+              style={{ objectPosition: `${image.focal_x}% ${image.focal_y}%` }}
             />
           ) : null}
         </div>
@@ -46,6 +47,7 @@ export function ProductGallery({ images, name }: { images: PublicImage[]; name: 
                 src={img.url}
                 alt={img.alt_text || name}
                 className="h-full w-full object-cover"
+                style={{ objectPosition: `${img.focal_x}% ${img.focal_y}%` }}
               />
             </button>
           ))}

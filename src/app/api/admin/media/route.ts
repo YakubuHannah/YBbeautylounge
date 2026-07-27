@@ -90,14 +90,24 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const body = (await req.json()) as { id?: string; alt_text?: string }
+  const body = (await req.json()) as {
+    id?: string
+    alt_text?: string
+    focal_x?: number
+    focal_y?: number
+  }
   if (!body.id) {
     return NextResponse.json({ error: 'id required' }, { status: 400 })
   }
 
+  const clampPct = (n: number) => Math.min(100, Math.max(0, Math.round(n)))
   const asset = await prisma.mediaAsset.update({
     where: { id: body.id },
-    data: { alt_text: body.alt_text?.trim() || null },
+    data: {
+      ...(body.alt_text !== undefined ? { alt_text: body.alt_text.trim() || null } : {}),
+      ...(typeof body.focal_x === 'number' ? { focal_x: clampPct(body.focal_x) } : {}),
+      ...(typeof body.focal_y === 'number' ? { focal_y: clampPct(body.focal_y) } : {}),
+    },
   })
   return NextResponse.json({ asset })
 }

@@ -7,6 +7,9 @@ type MediaAsset = {
   url: string
   filename: string
   mime_type: string
+  alt_text: string | null
+  focal_x: number
+  focal_y: number
 }
 
 export default function AboutPage() {
@@ -60,8 +63,9 @@ export default function AboutPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={images[0].url}
-                alt={images[0].filename}
+                alt={images[0].alt_text || images[0].filename}
                 className="h-full w-full object-cover"
+                style={{ objectPosition: `${images[0].focal_x}% ${images[0].focal_y}%` }}
               />
             </div>
           </figure>
@@ -87,8 +91,9 @@ export default function AboutPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={images[1].url}
-                alt={images[1].filename}
+                alt={images[1].alt_text || images[1].filename}
                 className="h-full w-full object-cover"
+                style={{ objectPosition: `${images[1].focal_x}% ${images[1].focal_y}%` }}
               />
             </div>
           </figure>

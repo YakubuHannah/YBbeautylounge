@@ -12,6 +12,8 @@ export async function GET() {
       filename: true,
       mime_type: true,
       alt_text: true,
+      focal_x: true,
+      focal_y: true,
     },
     orderBy: { createdAt: 'desc' },
     take: 100,

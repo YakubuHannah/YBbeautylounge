@@ -4,7 +4,15 @@ import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 
-type Asset = { id: string; url: string; filename: string; alt_text: string | null; mime_type: string }
+type Asset = {
+  id: string
+  url: string
+  filename: string
+  alt_text: string | null
+  mime_type: string
+  focal_x: number
+  focal_y: number
+}
 
 export default function AdminMediaPage() {
   const [assets, setAssets] = useState<Asset[]>([])
@@ -14,6 +22,7 @@ export default function AdminMediaPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
 
   async function load() {
     const res = await fetch('/api/admin/media')
@@ -63,6 +72,24 @@ export default function AdminMediaPage() {
 
   function updateAlt(id: string, alt: string) {
     setAssets((prev) => prev.map((a) => (a.id === id ? { ...a, alt_text: alt } : a)))
+  }
+
+  function setFocalFromPointer(id: string, e: React.PointerEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const pct = (v: number) => Math.min(100, Math.max(0, Math.round(v * 100)))
+    const x = pct((e.clientX - rect.left) / rect.width)
+    const y = pct((e.clientY - rect.top) / rect.height)
+    setAssets((prev) => prev.map((a) => (a.id === id ? { ...a, focal_x: x, focal_y: y } : a)))
+  }
+
+  async function saveFocal(id: string) {
+    const a = assets.find((x) => x.id === id)
+    if (!a) return
+    await fetch('/api/admin/media', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, focal_x: a.focal_x, focal_y: a.focal_y }),
+    })
   }
 
   async function saveAlt(id: string, alt: string) {
@@ -164,6 +191,10 @@ export default function AdminMediaPage() {
 
       <section>
         <h2 className="font-display text-xl text-ink">Your library</h2>
+        <p className="mt-1 text-xs text-ink-muted">
+          Drag on a photo to set how it sits inside frames — the point you hold stays in view.
+          Saves when you let go, and applies everywhere the photo appears.
+        </p>
         {assets.length === 0 ? (
           <p className="mt-3 text-sm text-ink-muted">No media saved yet.</p>
         ) : (
@@ -173,12 +204,28 @@ export default function AdminMediaPage() {
                 {a.mime_type.startsWith('video/') ? (
                   <video src={a.url} className="aspect-[4/5] w-full object-cover" controls />
                 ) : (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={a.url}
-                    alt={a.alt_text || a.filename}
-                    className="aspect-[4/5] w-full object-cover"
-                  />
+                  <div
+                    className="cursor-move touch-none select-none"
+                    onPointerDown={(e) => {
+                      e.currentTarget.setPointerCapture(e.pointerId)
+                      setDraggingId(a.id)
+                      setFocalFromPointer(a.id, e)
+                    }}
+                    onPointerMove={(e) => draggingId === a.id && setFocalFromPointer(a.id, e)}
+                    onPointerUp={() => {
+                      setDraggingId(null)
+                      saveFocal(a.id)
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={a.url}
+                      alt={a.alt_text || a.filename}
+                      className="pointer-events-none aspect-[4/5] w-full object-cover"
+                      style={{ objectPosition: `${a.focal_x}% ${a.focal_y}%` }}
+                      draggable={false}
+                    />
+                  </div>
                 )}
                 <p className="mt-2 truncate text-xs text-ink-muted">{a.filename}</p>
                 <input

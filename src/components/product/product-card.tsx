@@ -22,6 +22,7 @@ export function ProductCard({ product }: { product: PublicProduct }) {
             src={image.url}
             alt={image.alt_text || product.name}
             className="h-full w-full object-cover"
+            style={{ objectPosition: `${image.focal_x}% ${image.focal_y}%` }}
           />
         ) : null}
       </div>

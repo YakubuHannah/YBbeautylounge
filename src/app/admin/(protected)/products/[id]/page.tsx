@@ -20,7 +20,15 @@ type Variant = {
   is_active: boolean
 }
 
-type MediaAsset = { id: string; url: string; filename: string; mime_type: string; alt_text: string | null }
+type MediaAsset = {
+  id: string
+  url: string
+  filename: string
+  mime_type: string
+  alt_text: string | null
+  focal_x: number
+  focal_y: number
+}
 
 type ProductImage = {
   id: string
@@ -409,7 +417,12 @@ export default function AdminProductEditPage() {
                       <video src={m.url} className="aspect-[4/5] w-full object-cover" controls />
                     ) : (
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={m.url} alt={m.filename} className="aspect-[4/5] w-full object-cover" />
+                      <img
+                        src={m.url}
+                        alt={m.filename}
+                        className="aspect-[4/5] w-full object-cover"
+                        style={{ objectPosition: `${m.focal_x}% ${m.focal_y}%` }}
+                      />
                     )}
                     <span className="block truncate px-2 py-2 text-xs text-ink-muted">
                       {on ? `Selected · #${order}` : 'Tap to attach'}

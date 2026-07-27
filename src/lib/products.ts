@@ -23,6 +23,8 @@ export type PublicImage = {
   url: string
   alt_text: string | null
   sort_order: number
+  focal_x: number
+  focal_y: number
 }
 
 export type PublicProduct = {
@@ -100,7 +102,8 @@ function mapProduct(p: {
   images: {
     id: string
     sort_order: number
-    media_asset: { url: string; alt_text: string | null }
+    alt_text: string | null
+    media_asset: { url: string; alt_text: string | null; focal_x: number; focal_y: number }
   }[]
 }): PublicProduct {
   return {
@@ -118,8 +121,10 @@ function mapProduct(p: {
     images: p.images.map((img) => ({
       id: img.id,
       url: img.media_asset.url,
-      alt_text: img.media_asset.alt_text,
+      alt_text: img.alt_text ?? img.media_asset.alt_text,
       sort_order: img.sort_order,
+      focal_x: img.media_asset.focal_x,
+      focal_y: img.media_asset.focal_y,
     })),
   }
 }

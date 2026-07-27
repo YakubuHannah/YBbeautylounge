@@ -493,6 +493,8 @@ model MediaAsset {
   width       Int?
   height      Int?
   alt_text    String?
+  focal_x     Int      @default(50)
+  focal_y     Int      @default(50)
   uploaded_by_admin_id String? @map("uploaded_by_admin_id")
 
   folder          MediaFolder? @relation(fields: [folder_id], references: [id])
