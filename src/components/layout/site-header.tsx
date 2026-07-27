@@ -9,6 +9,7 @@ const nav = [
   { href: '/shop', label: 'Shop' },
   { href: '/length-guide', label: 'Length guide' },
   { href: '/restoration', label: 'Wig revamp' },
+  { href: '/reviews', label: 'Reviews' },
   { href: '/about', label: 'About' },
   { href: '/faq', label: 'FAQ' },
 ]

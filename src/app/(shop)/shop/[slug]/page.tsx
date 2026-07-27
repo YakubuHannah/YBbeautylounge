@@ -85,7 +85,12 @@ export default async function ProductPage({
       </section>
 
       <section className="mt-16 border-t border-vanilla-400 pt-12">
-        <h2 className="font-display text-2xl text-ink">Reviews</h2>
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="font-display text-2xl text-ink">Reviews</h2>
+          <Link href="/reviews" className="text-sm font-semibold text-cherry-600">
+            All reviews
+          </Link>
+        </div>
         {product.review_count > 0 && (
           <p className="mt-2 text-sm text-ink-muted">
             {product.avg_rating.toFixed(1)} average · {product.review_count} reviews

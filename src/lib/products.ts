@@ -175,6 +175,35 @@ export async function getApprovedReviews(productId: string) {
   }
 }
 
+export async function getAllApprovedReviews() {
+  try {
+    return await prisma.review.findMany({
+      where: { status: 'approved', rating: { gt: 0 } },
+      orderBy: [{ is_featured: 'desc' }, { createdAt: 'desc' }],
+      take: 50,
+      select: {
+        id: true,
+        rating: true,
+        title: true,
+        body: true,
+        display_name: true,
+        createdAt: true,
+        product: { select: { name: true, slug: true } },
+        images: {
+          select: {
+            id: true,
+            media_asset: {
+              select: { url: true, mime_type: true, alt_text: true, focal_x: true, focal_y: true },
+            },
+          },
+        },
+      },
+    })
+  } catch {
+    return []
+  }
+}
+
 export function minPrice(product: PublicProduct): number | null {
   if (!product.variants.length) return null
   return Math.min(...product.variants.map((v) => v.price))
