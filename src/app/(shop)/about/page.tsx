@@ -1,18 +1,36 @@
-import { prisma } from '@/lib/prisma'
+'use client'
 
-export const metadata = { title: 'About' }
+import { useEffect, useState } from 'react'
 
-async function getVideos() {
-  const assets = await prisma.mediaAsset.findMany({
-    where: { mime_type: { startsWith: 'video/' } },
-    orderBy: { createdAt: 'desc' },
-    take: 2,
-  })
-  return assets
+type MediaAsset = {
+  id: string
+  url: string
+  filename: string
+  mime_type: string
 }
 
-export default async function AboutPage() {
-  const videos = await getVideos()
+type Video = MediaAsset & { mime_type: string }
+
+export default function AboutPage() {
+  const [videos, setVideos] = useState<Video[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchVideos() {
+      try {
+        const res = await fetch('/api/admin/media')
+        const data = await res.json()
+        const allAssets = data.assets || []
+        const videoAssets = allAssets.filter((a: MediaAsset) => a.mime_type.startsWith('video/'))
+        setVideos(videoAssets.slice(0, 2))
+      } catch (e) {
+        console.error('Failed to load videos', e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchVideos()
+  }, [])
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-16 md:px-12">
@@ -36,12 +54,12 @@ export default async function AboutPage() {
               What an honour to be made as a woman.
             </p>
           </div>
-          {videos[0] && (
-            <div className="aspect-video overflow-hidden rounded-[2px] border border-vanilla-400">
+          {!loading && videos[0] && (
+            <div className="relative aspect-[4/3] w-full max-w-sm overflow-hidden rounded-[2px] border border-vanilla-400">
               <video 
                 src={videos[0].url} 
                 controls 
-                className="w-full h-full object-cover"
+                className="absolute inset-0 h-full w-full object-contain bg-black"
                 poster={videos[0].url.replace(/(\.[^.]+)$/, '-thumb$1')}
               >
                 Your browser does not support the video tag.
@@ -61,12 +79,12 @@ export default async function AboutPage() {
         </section>
 
         <section className="grid gap-8 md:grid-cols-2 items-start">
-          {videos[1] && (
-            <div className="aspect-video overflow-hidden rounded-[2px] border border-vanilla-400">
+          {!loading && videos[1] && (
+            <div className="relative aspect-[4/3] w-full max-w-sm overflow-hidden rounded-[2px] border border-vanilla-400">
               <video 
                 src={videos[1].url} 
                 controls 
-                className="w-full h-full object-cover"
+                className="absolute inset-0 h-full w-full object-contain bg-black"
                 poster={videos[1].url.replace(/(\.[^.]+)$/, '-thumb$1')}
               >
                 Your browser does not support the video tag.
