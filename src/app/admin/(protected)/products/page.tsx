@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { formatNaira } from '@/lib/money'
 
@@ -13,10 +14,12 @@ type Product = {
   variants: { price: number; stock_quantity: number }[]
 }
 
-export default function AdminProductsPage() {
+function ProductsList() {
+  const searchParams = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const showSaved = searchParams.get('saved') === '1'
 
   useEffect(() => {
     fetch('/api/admin/products')
@@ -43,6 +46,12 @@ export default function AdminProductsPage() {
           </Button>
         </Link>
       </div>
+
+      {showSaved && (
+        <p className="mt-4 rounded-[2px] border border-vanilla-400 bg-vanilla-50 px-4 py-3 text-sm font-medium text-ink">
+          Product saved successfully.
+        </p>
+      )}
 
       {error && <p className="mt-4 text-cherry-700">{error}</p>}
       {loading ? (
@@ -74,7 +83,10 @@ export default function AdminProductsPage() {
                     <td className="p-3 tabular-nums">{formatNaira(min)}</td>
                     <td className="p-3">{stock}</td>
                     <td className="p-3 text-right">
-                      <Link href={`/admin/products/${p.id}`} className="font-semibold text-cherry-600">
+                      <Link
+                        href={`/admin/products/${p.id}`}
+                        className="font-semibold text-cherry-600"
+                      >
                         Edit
                       </Link>
                     </td>
@@ -86,5 +98,13 @@ export default function AdminProductsPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function AdminProductsPage() {
+  return (
+    <Suspense fallback={<p className="text-ink-muted">Loading…</p>}>
+      <ProductsList />
+    </Suspense>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -44,6 +44,7 @@ const inputClass =
 
 export default function AdminProductEditPage() {
   const { id } = useParams<{ id: string }>()
+  const router = useRouter()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [texture, setTexture] = useState('')
@@ -154,7 +155,9 @@ export default function AdminProductEditPage() {
       setError(data.error || 'Save failed')
       return
     }
-    setMessage('Saved successfully.')
+    setMessage('Saved. Taking you back to all products…')
+    router.push('/admin/products?saved=1')
+    router.refresh()
   }
 
   function toggleMedia(mid: string) {
