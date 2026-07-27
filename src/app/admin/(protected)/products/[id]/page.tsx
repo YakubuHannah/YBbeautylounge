@@ -20,7 +20,7 @@ type Variant = {
   is_active: boolean
 }
 
-type MediaAsset = { id: string; url: string; filename: string; mime_type: string }
+type MediaAsset = { id: string; url: string; filename: string; mime_type: string; alt_text: string | null }
 
 type ProductImage = {
   id: string
@@ -62,7 +62,6 @@ export default function AdminProductEditPage() {
   const [variants, setVariants] = useState<Variant[]>([])
   const [media, setMedia] = useState<MediaAsset[]>([])
   const [selectedMedia, setSelectedMedia] = useState<string[]>([])
-  const [productImages, setProductImages] = useState<ProductImage[]>([])
   const [imageMetadata, setImageMetadata] = useState<Record<string, { display_name: string; alt_text: string }>>({})
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -122,14 +121,14 @@ export default function AdminProductEditPage() {
         (p.images || []).map((img: { media_asset_id: string }) => img.media_asset_id)
       )
       setMedia(mData.assets || [])
-      const images = p.images || []
-      setProductImages(images)
-      images.forEach((img: ProductImage) => {
-        imageMetadata[img.id] = {
+      const meta: Record<string, { display_name: string; alt_text: string }> = {}
+      ;(p.images || []).forEach((img: ProductImage) => {
+        meta[img.media_asset.id] = {
           display_name: img.display_name || '',
           alt_text: img.alt_text || '',
         }
       })
+      setImageMetadata(meta)
       setLoading(false)
     }
     load()
@@ -149,22 +148,6 @@ export default function AdminProductEditPage() {
     }))
   }
 
-  async function saveImageMetadata(imageId: string) {
-    const res = await fetch(`/api/admin/products/${id}/images`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        product_id: id,
-        image_id: imageId,
-        ...imageMetadata[imageId],
-      }),
-    })
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error || 'Failed to save image metadata')
-    }
-  }
-
   async function save() {
     setSaving(true)
     setMessage('')
@@ -178,7 +161,11 @@ export default function AdminProductEditPage() {
         texture,
         status,
         featured,
-        media_asset_ids: selectedMedia,
+        images: selectedMedia.map((assetId) => ({
+          media_asset_id: assetId,
+          display_name: imageMetadata[assetId]?.display_name || '',
+          alt_text: imageMetadata[assetId]?.alt_text || '',
+        })),
         variants: variants.map((v) => ({
           id: v.id,
           sku: v.sku || `SKU-${Date.now().toString(36)}`,
@@ -209,12 +196,18 @@ export default function AdminProductEditPage() {
     setSelectedMedia((prev) =>
       prev.includes(mid) ? prev.filter((x) => x !== mid) : [...prev, mid]
     )
+    setImageMetadata((prev) => {
+      if (prev[mid]) return prev
+      const asset = media.find((m) => m.id === mid)
+      return { ...prev, [mid]: { display_name: '', alt_text: asset?.alt_text || '' } }
+    })
   }
 
   if (loading) return <p className="text-ink-muted">Loading product…</p>
 
-  const hasImagesToPublish = status === 'active' && selectedMedia.length > 0
-  const hasEmptyAltText = hasImagesToPublish && Object.values(imageMetadata).some(m => !m.alt_text?.trim())
+  const missingAltCount = selectedMedia.filter(
+    (mid) => !imageMetadata[mid]?.alt_text?.trim()
+  ).length
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -272,9 +265,10 @@ export default function AdminProductEditPage() {
           <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} />
           Feature on homepage
         </label>
-        {hasEmptyAltText && (
-          <p className="text-sm text-cherry-700">
-            All images must have alt text before publishing.
+        {missingAltCount > 0 && (
+          <p className="text-sm text-ink-muted">
+            {missingAltCount} photo{missingAltCount > 1 ? 's' : ''} without alt text — a
+            description is auto-generated on save.
           </p>
         )}
       </section>
@@ -402,7 +396,6 @@ export default function AdminProductEditPage() {
             {media.map((m) => {
               const on = selectedMedia.includes(m.id)
               const order = on ? selectedMedia.indexOf(m.id) + 1 : null
-              const img = productImages.find(i => i.media_asset.id === m.id)
               return (
                 <div key={m.id} className="space-y-2">
                   <button
@@ -422,24 +415,22 @@ export default function AdminProductEditPage() {
                       {on ? `Selected · #${order}` : 'Tap to attach'}
                     </span>
                   </button>
-                  {on && img && (
+                  {on && (
                     <div className="space-y-2 px-2">
                       <Field label="Display name">
                         <input
                           className={inputClass}
-                          value={imageMetadata[img.id]?.display_name || ''}
-                          onChange={(e) => updateImageMetadata(img.id, 'display_name', e.target.value)}
-                          onBlur={() => saveImageMetadata(img.id)}
+                          value={imageMetadata[m.id]?.display_name || ''}
+                          onChange={(e) => updateImageMetadata(m.id, 'display_name', e.target.value)}
                           placeholder="e.g. bone-straight-signature-22in"
                         />
                       </Field>
-                      <Field label="Alt text" help="Required for accessibility and SEO">
+                      <Field label="Alt text" help="Describes the photo for accessibility and SEO. Saved with the product.">
                         <input
                           className={inputClass}
-                          value={imageMetadata[img.id]?.alt_text || ''}
-                          onChange={(e) => updateImageMetadata(img.id, 'alt_text', e.target.value)}
-                          onBlur={() => saveImageMetadata(img.id)}
-                          placeholder="Bone Straight Signature wig, 22 inches, natural black, front view"
+                          value={imageMetadata[m.id]?.alt_text || ''}
+                          onChange={(e) => updateImageMetadata(m.id, 'alt_text', e.target.value)}
+                          placeholder="Leave blank to auto-generate"
                         />
                       </Field>
                     </div>

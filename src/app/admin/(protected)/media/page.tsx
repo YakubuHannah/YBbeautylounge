@@ -61,6 +61,18 @@ export default function AdminMediaPage() {
     load()
   }
 
+  function updateAlt(id: string, alt: string) {
+    setAssets((prev) => prev.map((a) => (a.id === id ? { ...a, alt_text: alt } : a)))
+  }
+
+  async function saveAlt(id: string, alt: string) {
+    await fetch('/api/admin/media', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, alt_text: alt }),
+    })
+  }
+
   async function addUrl() {
     if (!url.trim()) return
     setUploading(true)
@@ -169,6 +181,14 @@ export default function AdminMediaPage() {
                   />
                 )}
                 <p className="mt-2 truncate text-xs text-ink-muted">{a.filename}</p>
+                <input
+                  className="mt-2 h-9 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-100 px-2 text-xs text-ink"
+                  value={a.alt_text || ''}
+                  onChange={(e) => updateAlt(a.id, e.target.value)}
+                  onBlur={(e) => saveAlt(a.id, e.target.value)}
+                  placeholder="Alt text (optional)"
+                  aria-label="Alt text"
+                />
               </div>
             ))}
           </div>

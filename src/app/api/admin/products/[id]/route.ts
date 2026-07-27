@@ -56,12 +56,15 @@ export async function PATCH(
       is_active?: boolean
     }>
     media_asset_ids?: string[]
+    images?: Array<{ media_asset_id: string; display_name?: string; alt_text?: string }>
   }
 
   const existing = await prisma.product.findUnique({ where: { id: params.id } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  if (body.status === 'active') {
+  // Incoming images always get alt text (provided or auto-generated below), so
+  // this publish guard only applies when the request does not replace them.
+  if (body.status === 'active' && !body.images && !body.media_asset_ids) {
     const images = await prisma.productImage.findMany({ where: { product_id: params.id } })
     if (images.length > 0) {
       const hasEmptyAlt = images.some(img => !img.alt_text?.trim())
@@ -119,22 +122,28 @@ export async function PATCH(
       }
     }
 
-    if (body.media_asset_ids) {
+    const incoming =
+      body.images ??
+      body.media_asset_ids?.map((media_asset_id) => ({
+        media_asset_id,
+        display_name: undefined,
+        alt_text: undefined,
+      }))
+    if (incoming) {
       await tx.productImage.deleteMany({ where: { product_id: params.id } })
-      if (body.media_asset_ids.length) {
+      if (incoming.length) {
         const productName = body.name || existing.name
-        const mediaIds = body.media_asset_ids
-        const count = mediaIds.length
-        const imageData = mediaIds.map((media_asset_id, idx) => {
+        const count = incoming.length
+        const imageData = incoming.map((img, idx) => {
           const position = idx + 1
-          const displayName = `${productName.toLowerCase().replace(/\s+/g, '-')}-${position}`
-          const altText = `${productName}, image ${position} of ${count}`
           return {
             product_id: params.id,
-            media_asset_id,
+            media_asset_id: img.media_asset_id,
             sort_order: idx,
-            display_name: displayName,
-            alt_text: altText,
+            display_name:
+              img.display_name?.trim() ||
+              `${productName.toLowerCase().replace(/\s+/g, '-')}-${position}`,
+            alt_text: img.alt_text?.trim() || `${productName}, image ${position} of ${count}`,
           }
         })
         await tx.productImage.createMany({ data: imageData })

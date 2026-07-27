@@ -82,3 +82,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+
+export async function PATCH(req: Request) {
+  try {
+    await requireAdminSession()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = (await req.json()) as { id?: string; alt_text?: string }
+  if (!body.id) {
+    return NextResponse.json({ error: 'id required' }, { status: 400 })
+  }
+
+  const asset = await prisma.mediaAsset.update({
+    where: { id: body.id },
+    data: { alt_text: body.alt_text?.trim() || null },
+  })
+  return NextResponse.json({ asset })
+}
