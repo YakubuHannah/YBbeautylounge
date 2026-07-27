@@ -122,10 +122,12 @@ export async function PATCH(
       await tx.productImage.deleteMany({ where: { product_id: params.id } })
       if (body.media_asset_ids.length) {
         const productName = body.name || existing.name
-        const imageData = body.media_asset_ids.map((media_asset_id, idx) => {
+        const mediaIds = body.media_asset_ids
+        const count = mediaIds.length
+        const imageData = mediaIds.map((media_asset_id, idx) => {
           const position = idx + 1
           const displayName = `${productName.toLowerCase().replace(/\s+/g, '-')}-${position}`
-          const altText = `${productName}, image ${position} of ${body.media_asset_ids.length}`
+          const altText = `${productName}, image ${position} of ${count}`
           return {
             product_id: params.id,
             media_asset_id,

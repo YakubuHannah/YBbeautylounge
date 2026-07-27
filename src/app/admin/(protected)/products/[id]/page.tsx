@@ -23,6 +23,7 @@ type MediaAsset = { id: string; url: string; filename: string; mime_type: string
 
 type ProductImage = {
   id: string
+  media_asset_id: string
   media_asset: MediaAsset
   sort_order: number
   display_name: string | null
