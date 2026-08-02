@@ -27,6 +27,8 @@ export default async function HomePage() {
           </p>
           <h1 className="mt-3 max-w-xl font-display text-4xl text-ink md:text-5xl">
             Made for one head.
+            <br />
+            Yours.
           </h1>
           <p className="mt-4 max-w-md text-base text-ink-muted">
             Customised human hair wigs, and a restoration studio for the ones you already own.

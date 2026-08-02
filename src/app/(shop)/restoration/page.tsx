@@ -22,7 +22,7 @@ export default async function RestorationPage() {
           <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-200">
             Service
           </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl">Wig revamp</h1>
+          <h1 className="mt-3 font-display text-4xl md:text-5xl">Wig revamp &amp; restoration</h1>
           <div className="mx-auto mt-4 max-w-lg space-y-3 text-violet-200">
             <TextBlocks text={pageText || DEFAULT_PAGE_COPY.restoration} />
           </div>
