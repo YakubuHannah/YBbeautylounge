@@ -18,6 +18,7 @@ export async function GET(
     include: {
       variants: { orderBy: { length_inches: 'asc' } },
       images: { orderBy: { sort_order: 'asc' }, include: { media_asset: true } },
+      collections: true,
     },
   })
   if (!product) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -57,6 +58,7 @@ export async function PATCH(
     }>
     media_asset_ids?: string[]
     images?: Array<{ media_asset_id: string; display_name?: string; alt_text?: string }>
+    category_id?: string | null
   }
 
   const existing = await prisma.product.findUnique({ where: { id: params.id } })
@@ -149,6 +151,18 @@ export async function PATCH(
         await tx.productImage.createMany({ data: imageData })
       }
     }
+
+    if (body.category_id !== undefined) {
+      await tx.collectionProduct.deleteMany({ where: { product_id: params.id } })
+      if (body.category_id) {
+        const category = await tx.collection.findUnique({ where: { id: body.category_id } })
+        if (category) {
+          await tx.collectionProduct.create({
+            data: { collection_id: category.id, product_id: params.id },
+          })
+        }
+      }
+    }
   })
 
   const product = await prisma.product.findUnique({
@@ -156,6 +170,7 @@ export async function PATCH(
     include: {
       variants: { orderBy: { length_inches: 'asc' } },
       images: { orderBy: { sort_order: 'asc' }, include: { media_asset: true } },
+      collections: true,
     },
   })
 

@@ -56,6 +56,7 @@ export async function POST(req: Request) {
       weight_grams?: number
     }>
     media_asset_ids?: string[]
+    category_id?: string
   }
 
   if (!body.name?.trim()) {
@@ -121,6 +122,15 @@ export async function POST(req: Request) {
       images: { include: { media_asset: true } },
     },
   })
+
+  if (body.category_id) {
+    const category = await prisma.collection.findUnique({ where: { id: body.category_id } })
+    if (category) {
+      await prisma.collectionProduct.create({
+        data: { collection_id: category.id, product_id: product.id },
+      })
+    }
+  }
 
   return NextResponse.json({ product })
 }

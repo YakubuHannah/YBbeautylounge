@@ -40,6 +40,7 @@ export type PublicProduct = {
   featured: boolean
   variants: PublicVariant[]
   images: PublicImage[]
+  category: { name: string; slug: string } | null
 }
 
 function serialiseVariant(v: {
@@ -85,6 +86,11 @@ const productInclude = {
     orderBy: { sort_order: 'asc' as const },
     include: { media_asset: true },
   },
+  collections: {
+    include: {
+      collection: { select: { name: true, slug: true, is_active: true } },
+    },
+  },
 }
 
 function mapProduct(p: {
@@ -105,6 +111,7 @@ function mapProduct(p: {
     alt_text: string | null
     media_asset: { url: string; alt_text: string | null; focal_x: number; focal_y: number }
   }[]
+  collections: { collection: { name: string; slug: string; is_active: boolean } }[]
 }): PublicProduct {
   return {
     id: p.id,
@@ -126,17 +133,39 @@ function mapProduct(p: {
       focal_x: img.media_asset.focal_x,
       focal_y: img.media_asset.focal_y,
     })),
+    category: (() => {
+      const active = p.collections.find((c) => c.collection.is_active)
+      return active ? { name: active.collection.name, slug: active.collection.slug } : null
+    })(),
   }
 }
 
-export async function getActiveProducts(): Promise<PublicProduct[]> {
+export async function getActiveProducts(categorySlug?: string): Promise<PublicProduct[]> {
   try {
     const rows = await prisma.product.findMany({
-      where: { status: 'active', deleted_at: null },
+      where: {
+        status: 'active',
+        deleted_at: null,
+        ...(categorySlug
+          ? { collections: { some: { collection: { slug: categorySlug, is_active: true } } } }
+          : {}),
+      },
       orderBy: { createdAt: 'desc' },
       include: productInclude,
     })
     return rows.map(mapProduct)
+  } catch {
+    return []
+  }
+}
+
+export async function getActiveCategories() {
+  try {
+    return await prisma.collection.findMany({
+      where: { is_active: true },
+      orderBy: [{ sort_order: 'asc' }, { name: 'asc' }],
+      select: { name: true, slug: true },
+    })
   } catch {
     return []
   }

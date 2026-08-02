@@ -1,13 +1,32 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/components/cart/cart-provider'
 import { formatNaira } from '@/lib/money'
 
+type Recommendation = {
+  name: string
+  slug: string
+  category: string | null
+  price: number | null
+  image: { url: string; alt_text: string | null; focal_x: number; focal_y: number } | null
+}
+
 export default function CartPage() {
   const { lines, subtotal, setQuantity, removeItem } = useCart()
+  const [recs, setRecs] = useState<Recommendation[]>([])
+
+  useEffect(() => {
+    if (!lines.length) return
+    const exclude = lines.map((l) => l.variantId).join(',')
+    fetch(`/api/recommendations?exclude=${encodeURIComponent(exclude)}`)
+      .then((res) => res.json())
+      .then((data) => setRecs(data.recommendations || []))
+      .catch(() => {})
+  }, [lines])
   const freeDeliveryAt = 20000000
   const remaining = Math.max(0, freeDeliveryAt - subtotal)
 
@@ -84,6 +103,47 @@ export default function CartPage() {
         </div>
         <p className="text-xs text-ink-muted">Delivery and VAT calculated at checkout</p>
       </div>
+
+      {recs.length > 0 && (
+        <section className="mt-10">
+          <h2 className="font-display text-xl text-ink">Complete your look</h2>
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            {recs.map((r) => (
+              <Link
+                key={r.slug}
+                href={`/shop/${r.slug}`}
+                className="group block no-underline hover:no-underline"
+              >
+                <div className="aspect-square overflow-hidden bg-vanilla-50">
+                  {r.image && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={r.image.url}
+                      alt={r.image.alt_text || r.name}
+                      className="h-full w-full object-cover"
+                      style={{ objectPosition: `${r.image.focal_x}% ${r.image.focal_y}%` }}
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+                {r.category && (
+                  <p className="mt-2 text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+                    {r.category}
+                  </p>
+                )}
+                <p className="font-display text-base text-ink group-hover:text-cherry-700">
+                  {r.name}
+                </p>
+                {r.price != null && (
+                  <p className="text-sm font-semibold tabular-nums text-cherry-600">
+                    {formatNaira(r.price)}
+                  </p>
+                )}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <Link href="/checkout" className="mt-6 block">
         <Button variant="primary" className="h-12 w-full">

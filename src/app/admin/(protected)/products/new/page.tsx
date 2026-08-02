@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -77,6 +77,15 @@ export default function NewProductPage() {
   const [variants, setVariants] = useState<VariantForm[]>([emptyVariant()])
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [categoryId, setCategoryId] = useState('')
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
+
+  useEffect(() => {
+    fetch('/api/admin/categories')
+      .then((res) => res.json())
+      .then((data) => setCategories(data.categories || []))
+      .catch(() => {})
+  }, [])
 
   function updateVariant(i: number, patch: Partial<VariantForm>) {
     setVariants((prev) => prev.map((v, idx) => (idx === i ? { ...v, ...patch } : v)))
@@ -112,6 +121,7 @@ export default function NewProductPage() {
           care_instructions: care.trim() || null,
           status,
           featured,
+          category_id: categoryId || null,
           variants: variants
             .filter((v) => v.price_naira !== '' || v.sku || v.length_inches)
             .map((v, i) => ({
@@ -207,6 +217,21 @@ export default function NewProductPage() {
               {TEXTURE_OPTIONS.map((o) => (
                 <option key={o.value || 'empty'} value={o.value}>
                   {o.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Category" help="Hair, accessories… manage the list under Admin → Categories.">
+            <select
+              className={inputClass}
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+            >
+              <option value="">No category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
                 </option>
               ))}
             </select>

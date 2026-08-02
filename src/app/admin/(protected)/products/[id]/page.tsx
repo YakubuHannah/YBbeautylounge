@@ -65,6 +65,8 @@ export default function AdminProductEditPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [texture, setTexture] = useState('')
+  const [categoryId, setCategoryId] = useState('')
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [status, setStatus] = useState('draft')
   const [featured, setFeatured] = useState(false)
   const [variants, setVariants] = useState<Variant[]>([])
@@ -78,12 +80,15 @@ export default function AdminProductEditPage() {
 
   useEffect(() => {
     async function load() {
-      const [pRes, mRes] = await Promise.all([
+      const [pRes, mRes, cRes] = await Promise.all([
         fetch(`/api/admin/products/${id}`),
         fetch('/api/admin/media'),
+        fetch('/api/admin/categories'),
       ])
       const pData = await pRes.json()
       const mData = await mRes.json()
+      const cData = await cRes.json()
+      if (cRes.ok) setCategories(cData.categories || [])
       if (!pRes.ok) {
         setError(pData.error || 'Failed to load')
         setLoading(false)
@@ -93,6 +98,7 @@ export default function AdminProductEditPage() {
       setName(p.name)
       setDescription(p.description || '')
       setTexture(p.texture || '')
+      setCategoryId(p.collections?.[0]?.collection_id || '')
       setStatus(p.status)
       setFeatured(p.featured)
       setVariants(
@@ -169,6 +175,7 @@ export default function AdminProductEditPage() {
         texture,
         status,
         featured,
+        category_id: categoryId || null,
         images: selectedMedia.map((assetId) => ({
           media_asset_id: assetId,
           display_name: imageMetadata[assetId]?.display_name || '',
@@ -266,6 +273,20 @@ export default function AdminProductEditPage() {
               <option value="draft">Draft</option>
               <option value="active">Active</option>
               <option value="archived">Archived</option>
+            </select>
+          </Field>
+          <Field label="Category" help="Manage the list under Admin → Categories.">
+            <select
+              className={inputClass}
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+            >
+              <option value="">No category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
             </select>
           </Field>
         </div>
