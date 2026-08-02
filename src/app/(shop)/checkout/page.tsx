@@ -189,40 +189,63 @@ export default function CheckoutPage() {
           Order {order.order_number}
         </p>
         <h1 className="mt-2 font-display text-3xl text-ink">
-          Thank you, {name.split(' ')[0] || 'love'} — we’re confirming your payment
+          Thank you, {name.split(' ')[0] || 'love'}
         </h1>
         <p className="mt-4 text-ink-muted">
-          This usually takes 5–10 minutes during working hours. Once it’s confirmed, you’ll get
-          an email from us letting you know your order is officially in motion — keep an eye on{' '}
-          <span className="font-semibold text-ink">{email}</span>.
+          We’re confirming your payment (usually within 5–10 minutes). Once it’s confirmed,
+          you’ll get an email from us letting you know your order is officially in motion —
+          keep an eye on <span className="font-semibold text-ink">{email}</span>.
         </p>
 
         <div className="mt-10 border border-vanilla-400 bg-vanilla-50 p-6 text-left">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
-            While you wait
+            While you wait, discover:
           </p>
-          <p className="mt-3 text-ink-muted">
-            Come and see how your crown gets its care — we share styling lessons, wig revival
-            tips, and simple DIYs for laying, preserving, and refreshing your curls between
-            wears.
-          </p>
+          <ul className="mt-4 space-y-3 text-ink">
+            <li>
+              <a
+                href="https://instagram.com/ybbeautylounge"
+                target="_blank"
+                rel="noreferrer"
+                className="no-underline hover:underline"
+              >
+                💎 Install tutorials
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://instagram.com/ybbeautylounge"
+                target="_blank"
+                rel="noreferrer"
+                className="no-underline hover:underline"
+              >
+                💎 Wig care &amp; revival tips
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://instagram.com/ybbeautylounge"
+                target="_blank"
+                rel="noreferrer"
+                className="no-underline hover:underline"
+              >
+                💎 Curl refresh guides
+              </a>
+            </li>
+            <li>
+              <Link href="/length-guide" className="no-underline hover:underline">
+                💎 Your perfect hair length guide
+              </Link>
+            </li>
+          </ul>
           <a
             href="https://instagram.com/ybbeautylounge"
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-flex h-12 items-center rounded-[2px] border border-ink px-6 text-sm font-semibold text-ink no-underline hover:bg-ink hover:text-vanilla-50 hover:no-underline"
+            className="mt-6 inline-flex h-12 items-center rounded-[2px] border border-ink px-6 text-sm font-semibold text-ink no-underline hover:bg-ink hover:text-vanilla-50 hover:no-underline"
           >
             Follow @ybbeautylounge on Instagram
           </a>
-        </div>
-
-        <div className="mt-8 space-y-3">
-          <Link href="/shop" className="block text-sm font-semibold text-cherry-600">
-            Anything else? Keep browsing the collection
-          </Link>
-          <Link href="/length-guide" className="block text-sm font-semibold text-cherry-600">
-            Learn your perfect length while you wait
-          </Link>
         </div>
       </main>
     )
