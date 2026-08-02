@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
 import { requireAdminSession } from '@/lib/auth/admin-session'
-import { uploadMediaFile } from '@/lib/storage'
+import { getSupabaseAdmin, uploadMediaFile } from '@/lib/storage'
 
 export async function GET() {
   try {
@@ -81,6 +81,61 @@ export async function POST(req: Request) {
     const message = e instanceof Error ? e.message : 'Upload failed'
     return NextResponse.json({ error: message }, { status: 500 })
   }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    await requireAdminSession()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = (await req.json()) as { id?: string }
+  if (!body.id) {
+    return NextResponse.json({ error: 'id required' }, { status: 400 })
+  }
+
+  const asset = await prisma.mediaAsset.findUnique({ where: { id: body.id } })
+  if (!asset) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  const [productUses, reviewUses, intakeUses] = await Promise.all([
+    prisma.productImage.count({ where: { media_asset_id: body.id } }),
+    prisma.reviewImage.count({ where: { media_asset_id: body.id } }),
+    prisma.restorationIntakeImage.count({ where: { media_asset_id: body.id } }),
+  ])
+  if (productUses + reviewUses + intakeUses > 0) {
+    const uses = [
+      productUses ? `${productUses} product photo${productUses > 1 ? 's' : ''}` : null,
+      reviewUses ? `${reviewUses} review` : null,
+      intakeUses ? `${intakeUses} restoration intake` : null,
+    ]
+      .filter(Boolean)
+      .join(', ')
+    return NextResponse.json(
+      { error: `Still in use (${uses}). Detach it there first, then delete.` },
+      { status: 400 }
+    )
+  }
+
+  await prisma.mediaAsset.delete({ where: { id: body.id } })
+
+  // Best-effort removal from storage — the database row is the source of truth.
+  try {
+    const supabase = getSupabaseAdmin()
+    const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'media'
+    const marker = `/object/public/${bucket}/`
+    const idx = asset.url.indexOf(marker)
+    if (supabase && idx !== -1) {
+      const path = decodeURIComponent(asset.url.slice(idx + marker.length))
+      await supabase.storage.from(bucket).remove([path])
+    }
+  } catch {
+    // storage cleanup failure is non-fatal
+  }
+
+  return NextResponse.json({ ok: true })
 }
 
 export async function PATCH(req: Request) {

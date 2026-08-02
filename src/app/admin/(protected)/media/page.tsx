@@ -92,6 +92,24 @@ export default function AdminMediaPage() {
     })
   }
 
+  async function deleteAsset(id: string) {
+    if (!window.confirm('Delete this file? This cannot be undone.')) return
+    setError('')
+    setMessage('')
+    const res = await fetch('/api/admin/media', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setError(data.error || 'Delete failed')
+      return
+    }
+    setMessage('Deleted.')
+    setAssets((prev) => prev.filter((a) => a.id !== id))
+  }
+
   async function saveAlt(id: string, alt: string) {
     await fetch('/api/admin/media', {
       method: 'PATCH',
@@ -236,6 +254,24 @@ export default function AdminMediaPage() {
                   placeholder="Alt text (optional)"
                   aria-label="Alt text"
                 />
+                <div className="mt-2 flex items-center gap-3 text-xs">
+                  <a
+                    href={a.url}
+                    download={a.filename}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-ink underline"
+                  >
+                    Download
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => deleteAsset(a.id)}
+                    className="font-semibold text-cherry-700"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
