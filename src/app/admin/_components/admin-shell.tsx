@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 
 const links = [
   { href: '/admin', label: 'Dashboard' },
+  { href: '/admin/orders', label: 'Orders' },
   { href: '/admin/products', label: 'Products' },
   { href: '/admin/media', label: 'Media' },
   { href: '/admin/reviews', label: 'Reviews' },

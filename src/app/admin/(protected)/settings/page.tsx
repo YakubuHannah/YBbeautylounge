@@ -7,10 +7,61 @@ import { Button } from '@/components/ui/button'
 const inputClass =
   'h-12 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-50 px-3 text-ink'
 
+const SECTIONS: {
+  title: string
+  fields: { key: string; label: string; help: string; placeholder: string }[]
+}[] = [
+  {
+    title: 'WhatsApp',
+    fields: [
+      {
+        key: 'whatsapp_number',
+        label: 'Business WhatsApp number',
+        help: 'International format, digits only. Used by every WhatsApp button on the site.',
+        placeholder: '2349037844700',
+      },
+    ],
+  },
+  {
+    title: 'Payments',
+    fields: [
+      {
+        key: 'bank_name',
+        label: 'Bank',
+        help: 'Shown to customers at checkout.',
+        placeholder: 'e.g. GTBank',
+      },
+      {
+        key: 'bank_account_name',
+        label: 'Account name',
+        help: 'Exactly as it appears on the account.',
+        placeholder: 'e.g. YB Beauty Lounge',
+      },
+      {
+        key: 'bank_account_number',
+        label: 'Account number',
+        help: '10 digits. Customers transfer to this account.',
+        placeholder: '0123456789',
+      },
+    ],
+  },
+  {
+    title: 'Notifications',
+    fields: [
+      {
+        key: 'notification_email',
+        label: 'Order alerts email',
+        help: 'New orders and payment claims are emailed here (requires the email key on Vercel).',
+        placeholder: 'you@example.com',
+      },
+    ],
+  },
+]
+
 export default function AdminSettingsPage() {
-  const [whatsapp, setWhatsapp] = useState('')
+  const [values, setValues] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [savingKey, setSavingKey] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -18,29 +69,29 @@ export default function AdminSettingsPage() {
     async function load() {
       const res = await fetch('/api/admin/settings')
       const data = await res.json()
-      if (res.ok) setWhatsapp(data.settings.whatsapp_number || '')
+      if (res.ok) setValues(data.settings)
       setLoading(false)
     }
     load()
   }, [])
 
-  async function save() {
-    setSaving(true)
+  async function save(key: string) {
+    setSavingKey(key)
     setMessage('')
     setError('')
     const res = await fetch('/api/admin/settings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: 'whatsapp_number', value: whatsapp }),
+      body: JSON.stringify({ key, value: values[key] ?? '' }),
     })
     const data = await res.json()
-    setSaving(false)
+    setSavingKey('')
     if (!res.ok) {
       setError(data.error || 'Save failed')
       return
     }
-    setWhatsapp(data.setting.value)
-    setMessage('Saved. Every WhatsApp button on the site now uses this number.')
+    setValues((prev) => ({ ...prev, [key]: data.setting.value }))
+    setMessage('Saved — live across the site now.')
   }
 
   if (loading) return <p className="text-ink-muted">Loading settings…</p>
@@ -54,28 +105,39 @@ export default function AdminSettingsPage() {
         </p>
       </div>
 
-      <section className="space-y-4 border border-vanilla-400 bg-vanilla-50 p-6">
-        <h2 className="font-display text-xl">WhatsApp</h2>
-        <label className="block space-y-1">
-          <span className="text-sm font-semibold text-ink">Business WhatsApp number</span>
-          <span className="block text-xs text-ink-muted">
-            International format, digits only — e.g. 2349037844700. Used by the floating
-            button, footer, product pages, checkout, and contact page.
-          </span>
-          <input
-            className={`${inputClass} mt-1`}
-            value={whatsapp}
-            onChange={(e) => setWhatsapp(e.target.value)}
-            placeholder="2349037844700"
-            inputMode="numeric"
-          />
-        </label>
-        {message && <p className="text-sm text-ink">{message}</p>}
-        {error && <p className="text-sm text-cherry-700">{error}</p>}
-        <Button type="button" variant="primary" loading={saving} onClick={save}>
-          Save settings
-        </Button>
-      </section>
+      {message && <p className="text-sm text-ink">{message}</p>}
+      {error && <p className="text-sm text-cherry-700">{error}</p>}
+
+      {SECTIONS.map((section) => (
+        <section key={section.title} className="space-y-5 border border-vanilla-400 bg-vanilla-50 p-6">
+          <h2 className="font-display text-xl">{section.title}</h2>
+          {section.fields.map((field) => (
+            <div key={field.key} className="space-y-1">
+              <label className="block">
+                <span className="text-sm font-semibold text-ink">{field.label}</span>
+                <span className="block text-xs text-ink-muted">{field.help}</span>
+                <input
+                  className={`${inputClass} mt-1`}
+                  value={values[field.key] ?? ''}
+                  onChange={(e) =>
+                    setValues((prev) => ({ ...prev, [field.key]: e.target.value }))
+                  }
+                  placeholder={field.placeholder}
+                />
+              </label>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                loading={savingKey === field.key}
+                onClick={() => save(field.key)}
+              >
+                Save
+              </Button>
+            </div>
+          ))}
+        </section>
+      ))}
     </div>
   )
 }

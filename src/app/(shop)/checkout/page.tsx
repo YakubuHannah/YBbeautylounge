@@ -21,10 +21,19 @@ const states = [
   'Other',
 ]
 
+type PlacedOrder = {
+  order_id: string
+  order_number: string
+  total: number
+  due_now: number
+  bank: { bank_name: string; account_name: string; account_number: string }
+}
+
 export default function CheckoutPage() {
   const { lines, subtotal, clear } = useCart()
   const { whatsapp_number } = usePublicSettings()
-  const [done, setDone] = useState(false)
+  const [step, setStep] = useState<'details' | 'pay' | 'done'>('details')
+  const [order, setOrder] = useState<PlacedOrder | null>(null)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -32,8 +41,63 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState('')
   const [plan, setPlan] = useState<'full' | 'deposit_50'>('full')
   const [marketing, setMarketing] = useState(false)
+  const [screenshot, setScreenshot] = useState<File | null>(null)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
 
-  if (lines.length === 0 && !done) {
+  async function placeOrder(e: React.FormEvent) {
+    e.preventDefault()
+    setSending(true)
+    setError('')
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        phone,
+        email,
+        state,
+        address,
+        plan,
+        marketing,
+        items: lines.map((l) => ({ variant_id: l.variantId, quantity: l.quantity })),
+      }),
+    })
+    const data = await res.json()
+    setSending(false)
+    if (!res.ok) {
+      setError(data.error || 'Could not place the order — please try again.')
+      return
+    }
+    setOrder(data)
+    clear()
+    setStep('pay')
+  }
+
+  async function claimPayment() {
+    if (!order) return
+    if (!screenshot) {
+      setError('Attach a screenshot of your transfer receipt first.')
+      return
+    }
+    setSending(true)
+    setError('')
+    const form = new FormData()
+    form.append('screenshot', screenshot)
+    const res = await fetch(`/api/orders/${order.order_id}/payment`, {
+      method: 'POST',
+      body: form,
+    })
+    const data = await res.json()
+    setSending(false)
+    if (!res.ok) {
+      setError(data.error || 'Could not send your receipt — please try again.')
+      return
+    }
+    setStep('done')
+  }
+
+  if (step === 'details' && lines.length === 0) {
     return (
       <main className="mx-auto max-w-lg px-5 py-16 text-center">
         <h1 className="font-display text-3xl text-ink">Nothing to check out</h1>
@@ -44,33 +108,122 @@ export default function CheckoutPage() {
     )
   }
 
-  if (done) {
-    const msg = `Order enquiry%0AName: ${name}%0APhone: ${phone}%0ATotal: ${formatNaira(subtotal)}`
+  if (step === 'pay' && order) {
+    const bankReady = order.bank.account_number && order.bank.account_name
     return (
-      <main className="mx-auto max-w-lg px-5 py-16 text-center md:px-12">
-        <h1 className="font-display text-3xl text-ink">Thank you, {name.split(' ')[0]}</h1>
-        <p className="mt-4 text-ink-muted">
-          Your details are ready. Full Paystack checkout is next on the build plan — for now,
-          send this bag on WhatsApp to complete with us, or track later once self-serve payments
-          go live.
+      <main className="mx-auto max-w-lg px-5 py-16 md:px-12">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+          Order {order.order_number}
         </p>
+        <h1 className="mt-2 font-display text-3xl text-ink">Pay by bank transfer</h1>
+        <p className="mt-3 text-ink-muted">
+          Transfer{' '}
+          <span className="font-semibold tabular-nums text-cherry-600">
+            {formatNaira(order.due_now)}
+          </span>{' '}
+          {order.due_now < order.total ? '(your 50% deposit) ' : ''}to the account below, then
+          attach your receipt so we can confirm it.
+        </p>
+
+        {bankReady ? (
+          <div className="mt-6 space-y-2 border border-vanilla-400 bg-vanilla-50 p-6">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+              Bank details
+            </p>
+            <p className="font-display text-2xl tabular-nums text-ink">
+              {order.bank.account_number}
+            </p>
+            <p className="text-ink">{order.bank.account_name}</p>
+            <p className="text-ink-muted">{order.bank.bank_name}</p>
+            <p className="pt-2 text-xs text-ink-muted">
+              If your bank allows a narration, include your order number{' '}
+              <span className="font-semibold text-ink">{order.order_number}</span>.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 border border-vanilla-400 bg-vanilla-50 p-6 text-sm text-ink-muted">
+            Our account details are being updated — message us on WhatsApp and we’ll send them
+            right away with your order number.
+          </div>
+        )}
+
         <div className="mt-8 space-y-3">
+          <p className="text-sm font-semibold text-ink">Made the transfer?</p>
+          <input
+            type="file"
+            accept="image/*,application/pdf"
+            onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
+            className="block w-full text-sm"
+            aria-label="Transfer receipt screenshot"
+          />
+          {error && <p className="text-sm text-cherry-700">{error}</p>}
+          <Button
+            type="button"
+            variant="primary"
+            className="h-12 w-full"
+            loading={sending}
+            onClick={claimPayment}
+          >
+            I have made the payment
+          </Button>
           <a
             href={whatsAppUrl(
-              `Hi YBBeautylounge, I'd like to complete my order.\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nState: ${state}\nPlan: ${plan}\nItems: ${lines.map((l) => `${l.productName} (${l.variantLabel}) x${l.quantity}`).join('; ')}\nSubtotal: ${formatNaira(subtotal)}`,
+              `Hi YBBeautylounge, I placed order ${order.order_number} and I have a question about payment.`,
               whatsapp_number
             )}
             target="_blank"
             rel="noreferrer"
-            className="flex h-12 w-full items-center justify-center rounded-[2px] bg-cherry-600 text-sm font-semibold text-vanilla-50 no-underline hover:bg-cherry-700 hover:no-underline"
+            className="block text-center text-sm font-semibold text-cherry-600 no-underline hover:underline"
           >
-            Send order on WhatsApp
+            Questions? Chat with us on WhatsApp
           </a>
+        </div>
+      </main>
+    )
+  }
+
+  if (step === 'done' && order) {
+    return (
+      <main className="mx-auto max-w-lg px-5 py-16 text-center md:px-12">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+          Order {order.order_number}
+        </p>
+        <h1 className="mt-2 font-display text-3xl text-ink">
+          Thank you, {name.split(' ')[0] || 'love'} — we’re confirming your payment
+        </h1>
+        <p className="mt-4 text-ink-muted">
+          This usually takes 5–10 minutes during working hours. Once it’s confirmed, you’ll get
+          an email from us letting you know your order is officially in motion — keep an eye on{' '}
+          <span className="font-semibold text-ink">{email}</span>.
+        </p>
+
+        <div className="mt-10 border border-vanilla-400 bg-vanilla-50 p-6 text-left">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+            While you wait
+          </p>
+          <p className="mt-3 text-ink-muted">
+            Come and see how your crown gets its care — we share styling lessons, wig revival
+            tips, and simple DIYs for laying, preserving, and refreshing your curls between
+            wears.
+          </p>
+          <a
+            href="https://instagram.com/ybbeautylounge"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex h-12 items-center rounded-[2px] border border-ink px-6 text-sm font-semibold text-ink no-underline hover:bg-ink hover:text-vanilla-50 hover:no-underline"
+          >
+            Follow @ybbeautylounge on Instagram
+          </a>
+        </div>
+
+        <div className="mt-8 space-y-3">
           <Link href="/shop" className="block text-sm font-semibold text-cherry-600">
-            Keep shopping
+            Anything else? Keep browsing the collection
+          </Link>
+          <Link href="/length-guide" className="block text-sm font-semibold text-cherry-600">
+            Learn your perfect length while you wait
           </Link>
         </div>
-        <p className="mt-6 text-xs text-ink-muted">{decodeURIComponent(msg).slice(0, 0)}</p>
       </main>
     )
   }
@@ -78,16 +231,9 @@ export default function CheckoutPage() {
   return (
     <main className="mx-auto max-w-xl px-5 py-10 md:px-12 md:py-16">
       <h1 className="font-display text-3xl text-ink">Checkout</h1>
-      <p className="mt-2 text-sm text-ink-muted">Guest checkout · under five steps</p>
+      <p className="mt-2 text-sm text-ink-muted">Guest checkout · pay by bank transfer</p>
 
-      <form
-        className="mt-8 space-y-6"
-        onSubmit={(e) => {
-          e.preventDefault()
-          setDone(true)
-          clear()
-        }}
-      >
+      <form className="mt-8 space-y-6" onSubmit={placeOrder}>
         <fieldset className="space-y-4">
           <legend className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
             Contact
@@ -110,7 +256,7 @@ export default function CheckoutPage() {
           <input
             required
             type="email"
-            placeholder="Email (for receipt)"
+            placeholder="Email (for order updates)"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="h-12 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-50 px-3"
@@ -183,12 +329,15 @@ export default function CheckoutPage() {
             <span className="font-semibold tabular-nums">{formatNaira(subtotal)}</span>
           </div>
           <p className="mt-2 text-xs text-ink-muted">
-            Server-side pricing and Paystack confirmation land in the next build milestone.
+            The exact amount is confirmed on the next step, priced from our records — never from
+            your browser.
           </p>
         </div>
 
-        <Button type="submit" variant="primary" className="h-12 w-full">
-          Continue
+        {error && <p className="text-sm text-cherry-700">{error}</p>}
+
+        <Button type="submit" variant="primary" className="h-12 w-full" loading={sending}>
+          Continue to payment
         </Button>
       </form>
     </main>

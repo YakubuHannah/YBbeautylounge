@@ -14,6 +14,22 @@ const VALIDATORS: Record<string, (value: string) => string | null> = {
     }
     return null
   },
+  bank_name: (value) => (value.trim().length > 80 ? 'Bank name is too long.' : null),
+  bank_account_name: (value) =>
+    value.trim().length > 120 ? 'Account name is too long.' : null,
+  bank_account_number: (value) => {
+    const digits = value.replace(/\D/g, '')
+    if (value.trim() && !/^\d{10}$/.test(digits)) {
+      return 'Account numbers are 10 digits.'
+    }
+    return null
+  },
+  notification_email: (value) => {
+    if (value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+      return 'Enter a valid email address.'
+    }
+    return null
+  },
 }
 
 export async function GET() {
@@ -54,7 +70,9 @@ export async function PATCH(req: Request) {
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 })
   }
-  const value = body.key === 'whatsapp_number' ? raw.replace(/\D/g, '') : raw.trim()
+  const value = ['whatsapp_number', 'bank_account_number'].includes(body.key)
+    ? raw.replace(/\D/g, '')
+    : raw.trim()
 
   const before = await prisma.setting.findUnique({ where: { key: body.key } })
   const setting = await prisma.setting.upsert({
