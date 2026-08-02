@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 /** Pages the founder edits in Admin → Pages. Public pages fall back to built-in copy. */
 export const EDITABLE_PAGES: { slug: string; label: string }[] = [
   { slug: 'length-guide', label: 'Length guide' },
-  { slug: 'restoration', label: 'Wig revamp (intro)' },
+  { slug: 'restoration', label: 'Wig revamp' },
   { slug: 'returns', label: 'Returns & refund policy' },
   { slug: 'privacy', label: 'Privacy policy' },
   { slug: 'terms', label: 'Terms of sale' },

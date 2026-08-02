@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 
+import { TierEditor } from '../../_components/tier-editor'
+
 type LengthRow = { inches: string; sits: string; best: string }
 type EditablePage = { slug: string; label: string; content: string; rows?: LengthRow[] }
 
@@ -169,6 +171,8 @@ export default function AdminPagesPage() {
             </Button>
           </div>
         )}
+
+        {selected === 'restoration' && <TierEditor />}
 
         {message && <p className="text-sm text-ink">{message}</p>}
         {error && <p className="text-sm text-cherry-700">{error}</p>}
