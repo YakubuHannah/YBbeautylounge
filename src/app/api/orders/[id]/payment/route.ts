@@ -64,13 +64,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }),
   ])
 
-  notifyFounder(
+  // Awaited: on serverless, un-awaited work can be frozen when the response returns.
+  await notifyFounder(
     `Payment claim — ${order.order_number}`,
     `${order.customer_name_snapshot} (${order.customer_phone_snapshot}) says they have paid ` +
       `₦${Math.round(dueNow / 100).toLocaleString()} for ${order.order_number}.\n` +
       `Receipt: ${uploaded.url}\n` +
       `Confirm it in Admin → Orders, then email the customer.`
-  ).catch(() => {})
+  )
 
   return NextResponse.json({ ok: true })
 }

@@ -131,7 +131,8 @@ export async function POST(req: Request) {
     getSettingValue('bank_account_number'),
   ])
 
-  notifyFounder(
+  // Awaited: on serverless, un-awaited work can be frozen when the response returns.
+  await notifyFounder(
     `New order ${order.order_number} — ₦${Math.round(total / 100).toLocaleString()}`,
     `${body.name} (${phoneNormalised}${body.email ? `, ${body.email}` : ''}) placed ${order.order_number}.\n` +
       validLines
@@ -140,7 +141,7 @@ export async function POST(req: Request) {
       `\nDue now (${plan === 'deposit_50' ? '50% deposit' : 'full'}): ₦${Math.round(dueNow / 100).toLocaleString()}` +
       `\nDeliver to: ${body.address}, ${body.state}` +
       `\nAwaiting bank transfer — watch Admin → Orders for the payment claim.`
-  ).catch(() => {})
+  )
 
   return NextResponse.json({
     order_id: order.id,
