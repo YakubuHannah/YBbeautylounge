@@ -3,17 +3,24 @@ import { AnnouncementBar } from '@/components/layout/announcement-bar'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { SiteHeader } from '@/components/layout/site-header'
 import { WhatsAppFloat } from '@/components/layout/whatsapp-float'
+import { SettingsProvider } from '@/components/settings/settings-provider'
+import { getWhatsAppNumber } from '@/lib/settings'
 
-export default function ShopLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = 'force-dynamic'
+
+export default async function ShopLayout({ children }: { children: React.ReactNode }) {
+  const whatsappNumber = await getWhatsAppNumber()
   return (
-    <CartProvider>
-      <div className="flex min-h-screen flex-col">
-        <AnnouncementBar />
-        <SiteHeader />
-        <div className="flex-1">{children}</div>
-        <SiteFooter />
-        <WhatsAppFloat />
-      </div>
-    </CartProvider>
+    <SettingsProvider settings={{ whatsapp_number: whatsappNumber }}>
+      <CartProvider>
+        <div className="flex min-h-screen flex-col">
+          <AnnouncementBar />
+          <SiteHeader />
+          <div className="flex-1">{children}</div>
+          <SiteFooter whatsappNumber={whatsappNumber} />
+          <WhatsAppFloat number={whatsappNumber} />
+        </div>
+      </CartProvider>
+    </SettingsProvider>
   )
 }

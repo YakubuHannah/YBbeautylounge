@@ -8,10 +8,12 @@ import { useCart } from '@/components/cart/cart-provider'
 import { formatNaira } from '@/lib/money'
 import { textureLabel, type PublicProduct } from '@/lib/products'
 import { whatsAppUrl } from '@/lib/whatsapp'
+import { usePublicSettings } from '@/components/settings/settings-provider'
 
 export function ProductPurchase({ product }: { product: PublicProduct }) {
   const router = useRouter()
   const { addItem } = useCart()
+  const { whatsapp_number } = usePublicSettings()
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? '')
   const [qty, setQty] = useState(1)
 
@@ -126,7 +128,7 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
           Add to cart
         </Button>
         <a
-          href={whatsAppUrl(`Hi, I’m interested in ${product.name} (${label}).`)}
+          href={whatsAppUrl(`Hi, I’m interested in ${product.name} (${label}).`, whatsapp_number)}
           target="_blank"
           rel="noreferrer"
           className="flex h-12 w-full items-center justify-center rounded-[2px] border border-ink text-sm font-semibold text-ink no-underline hover:bg-ink hover:text-vanilla-50 hover:no-underline"
@@ -136,7 +138,7 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
       </div>
 
       <p className="text-sm text-ink-muted">
-        Dispatched within 1 business day, then 2–4 days within Lagos (other zones vary).
+        Dispatched within 3–5 working days.
       </p>
     </div>
   )

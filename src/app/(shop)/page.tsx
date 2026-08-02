@@ -45,7 +45,7 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-6 text-center sm:grid-cols-2 md:grid-cols-4">
           {[
             '100% human hair',
-            'Dispatched within 1 business day',
+            'Dispatched within 3–5 working days',
             'Reviews from verified purchases',
             'Worldwide delivery',
           ].map((item) => (

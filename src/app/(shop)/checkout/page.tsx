@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { useCart } from '@/components/cart/cart-provider'
 import { formatNaira } from '@/lib/money'
 import { whatsAppUrl } from '@/lib/whatsapp'
+import { usePublicSettings } from '@/components/settings/settings-provider'
 
 const states = [
   'Lagos',
@@ -22,6 +23,7 @@ const states = [
 
 export default function CheckoutPage() {
   const { lines, subtotal, clear } = useCart()
+  const { whatsapp_number } = usePublicSettings()
   const [done, setDone] = useState(false)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -55,7 +57,8 @@ export default function CheckoutPage() {
         <div className="mt-8 space-y-3">
           <a
             href={whatsAppUrl(
-              `Hi YBBeautylounge, I'd like to complete my order.\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nState: ${state}\nPlan: ${plan}\nItems: ${lines.map((l) => `${l.productName} (${l.variantLabel}) x${l.quantity}`).join('; ')}\nSubtotal: ${formatNaira(subtotal)}`
+              `Hi YBBeautylounge, I'd like to complete my order.\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nState: ${state}\nPlan: ${plan}\nItems: ${lines.map((l) => `${l.productName} (${l.variantLabel}) x${l.quantity}`).join('; ')}\nSubtotal: ${formatNaira(subtotal)}`,
+              whatsapp_number
             )}
             target="_blank"
             rel="noreferrer"

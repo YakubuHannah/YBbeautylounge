@@ -1,3 +1,6 @@
+import { TextBlocks } from '@/components/content/text-blocks'
+import { getPageText } from '@/lib/pages'
+
 export const metadata = { title: 'Length guide' }
 
 const lengths = [
@@ -9,17 +12,24 @@ const lengths = [
   { inches: '22"+', sits: 'Waist-bound', best: 'Drama — denser caps help' },
 ]
 
-export default function LengthGuidePage() {
+export default async function LengthGuidePage() {
+  const pageText = await getPageText('length-guide')
   return (
     <main className="mx-auto max-w-3xl px-5 py-16 md:px-12">
       <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
         Reference
       </p>
       <h1 className="mt-2 font-display text-4xl text-ink">Length guide</h1>
-      <p className="mt-4 max-w-xl text-ink-muted">
-        Same body landmarks, plain language. Density reads fuller on shorter units — say so if
-        you’re between sizes.
-      </p>
+      <div className="mt-4 max-w-xl space-y-3 text-ink-muted">
+        {pageText ? (
+          <TextBlocks text={pageText} />
+        ) : (
+          <p>
+            Same body landmarks, plain language. Density reads fuller on shorter units — say so
+            if you’re between sizes.
+          </p>
+        )}
+      </div>
 
       <div className="mt-10 overflow-hidden bg-vanilla-50">
         {/* eslint-disable-next-line @next/next/no-img-element */}

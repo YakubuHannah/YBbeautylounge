@@ -1,10 +1,17 @@
 import Link from 'next/link'
 
+import { TextBlocks } from '@/components/content/text-blocks'
+import { getPageText } from '@/lib/pages'
+import { getWhatsAppNumber } from '@/lib/settings'
 import { whatsAppUrl } from '@/lib/whatsapp'
 
 export const metadata = { title: 'Restoration' }
 
-export default function RestorationPage() {
+export default async function RestorationPage() {
+  const [whatsappNumber, pageText] = await Promise.all([
+    getWhatsAppNumber(),
+    getPageText('restoration'),
+  ])
   return (
     <main>
       <section className="bg-violet-800 px-5 py-20 text-vanilla-50 md:px-12">
@@ -13,10 +20,16 @@ export default function RestorationPage() {
             Service
           </p>
           <h1 className="mt-3 font-display text-4xl md:text-5xl">Wig revamp</h1>
-          <p className="mx-auto mt-4 max-w-lg text-violet-200">
-            Capacity-bound work by the founder’s hands — quoted clearly, deposited through the
-            same order system, tracked without chasing.
-          </p>
+          <div className="mx-auto mt-4 max-w-lg space-y-3 text-violet-200">
+            {pageText ? (
+              <TextBlocks text={pageText} />
+            ) : (
+              <p>
+                Capacity-bound work by the founder’s hands — quoted clearly, deposited through
+                the same order system, tracked without chasing.
+              </p>
+            )}
+          </div>
         </div>
       </section>
 
@@ -58,7 +71,8 @@ export default function RestorationPage() {
           </p>
           <a
             href={whatsAppUrl(
-              'Hi, I’d like a restoration quote. I can send photos of the unit’s current condition.'
+              'Hi, I’d like a restoration quote. I can send photos of the unit’s current condition.',
+              whatsappNumber
             )}
             target="_blank"
             rel="noreferrer"

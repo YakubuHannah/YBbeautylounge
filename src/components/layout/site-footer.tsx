@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import { whatsAppUrl } from '@/lib/whatsapp'
 
-export function SiteFooter() {
+export function SiteFooter({ whatsappNumber }: { whatsappNumber: string }) {
   return (
     <footer className="mt-auto bg-violet-800 text-vanilla-50">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-3 md:px-12">
@@ -67,7 +67,7 @@ export function SiteFooter() {
             </li>
             <li>
               <a
-                href={whatsAppUrl('Hi YBBeautylounge, I have a question.')}
+                href={whatsAppUrl('Hi YBBeautylounge, I have a question.', whatsappNumber)}
                 className="text-vanilla-50 no-underline hover:underline"
                 target="_blank"
                 rel="noreferrer"

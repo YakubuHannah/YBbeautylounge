@@ -1,6 +1,8 @@
+import { prisma } from '@/lib/prisma'
+
 export const metadata = { title: 'FAQ' }
 
-const faqs = [
+const FALLBACK: { cat: string; items: { q: string; a: string }[] }[] = [
   {
     cat: 'Ordering',
     items: [
@@ -10,7 +12,7 @@ const faqs = [
       },
       {
         q: 'Can I pay in parts?',
-        a: 'Yes — pay in full or 50% deposit with balance before dispatch. Pay-in-4 is built for scale.',
+        a: 'Yes — pay in full or 50% deposit with balance before dispatch.',
       },
     ],
   },
@@ -18,21 +20,12 @@ const faqs = [
     cat: 'Delivery',
     items: [
       {
-        q: 'How fast is Lagos dispatch?',
-        a: 'Orders are typically prepared within 1 business day, then 2–4 days delivery in Lagos.',
+        q: 'How fast is dispatch?',
+        a: 'Orders are dispatched within 3–5 working days.',
       },
       {
         q: 'Is there free delivery?',
-        a: 'Free delivery applies from ₦200,000 subtotal (founder-editable in admin).',
-      },
-    ],
-  },
-  {
-    cat: 'Hair care',
-    items: [
-      {
-        q: 'Can I colour the unit?',
-        a: 'Check the product attributes — colourable flag is set per variant where true.',
+        a: 'Free delivery applies from ₦200,000 subtotal.',
       },
     ],
   },
@@ -47,7 +40,27 @@ const faqs = [
   },
 ]
 
-export default function FaqPage() {
+async function getFaqGroups() {
+  try {
+    const rows = await prisma.faq.findMany({
+      where: { is_active: true },
+      orderBy: [{ category: 'asc' }, { sort_order: 'asc' }],
+    })
+    if (!rows.length) return FALLBACK
+    const groups = new Map<string, { q: string; a: string }[]>()
+    for (const row of rows) {
+      const list = groups.get(row.category) ?? []
+      list.push({ q: row.question, a: row.answer })
+      groups.set(row.category, list)
+    }
+    return Array.from(groups, ([cat, items]) => ({ cat, items }))
+  } catch {
+    return FALLBACK
+  }
+}
+
+export default async function FaqPage() {
+  const faqs = await getFaqGroups()
   return (
     <main className="mx-auto max-w-2xl px-5 py-16 md:px-12">
       <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">Help</p>

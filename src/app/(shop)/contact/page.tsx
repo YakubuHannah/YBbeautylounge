@@ -1,8 +1,10 @@
+import { getWhatsAppNumber } from '@/lib/settings'
 import { whatsAppUrl } from '@/lib/whatsapp'
 
 export const metadata = { title: 'Contact' }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const whatsappNumber = await getWhatsAppNumber()
   return (
     <main className="mx-auto max-w-xl px-5 py-16 md:px-12">
       <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">Contact</p>
@@ -12,7 +14,7 @@ export default function ContactPage() {
         best orders begin.
       </p>
       <a
-        href={whatsAppUrl('Hi YBBeautylounge, I’d like to get in touch.')}
+        href={whatsAppUrl('Hi YBBeautylounge, I’d like to get in touch.', whatsappNumber)}
         target="_blank"
         rel="noreferrer"
         className="mt-8 flex h-12 items-center justify-center rounded-[2px] bg-cherry-600 text-sm font-semibold text-vanilla-50 no-underline hover:bg-cherry-700 hover:no-underline"
