@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 
-type EditablePage = { slug: string; label: string; content: string }
+type LengthRow = { inches: string; sits: string; best: string }
+type EditablePage = { slug: string; label: string; content: string; rows?: LengthRow[] }
 
 export default function AdminPagesPage() {
   const [pages, setPages] = useState<EditablePage[]>([])
   const [selected, setSelected] = useState('')
   const [content, setContent] = useState('')
+  const [rows, setRows] = useState<LengthRow[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -24,6 +26,7 @@ export default function AdminPagesPage() {
         if (data.pages.length) {
           setSelected(data.pages[0].slug)
           setContent(data.pages[0].content)
+          setRows(data.pages[0].rows || [])
         }
       }
       setLoading(false)
@@ -32,20 +35,31 @@ export default function AdminPagesPage() {
   }, [])
 
   function choose(slug: string) {
+    const page = pages.find((p) => p.slug === slug)
     setSelected(slug)
-    setContent(pages.find((p) => p.slug === slug)?.content || '')
+    setContent(page?.content || '')
+    setRows(page?.rows || [])
     setMessage('')
     setError('')
+  }
+
+  function updateRow(index: number, patch: Partial<LengthRow>) {
+    setRows((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)))
   }
 
   async function save() {
     setSaving(true)
     setMessage('')
     setError('')
+    const payload: { slug: string; content: string; rows?: LengthRow[] } = {
+      slug: selected,
+      content,
+    }
+    if (selected === 'length-guide') payload.rows = rows
     const res = await fetch('/api/admin/pages', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: selected, content }),
+      body: JSON.stringify(payload),
     })
     const data = await res.json()
     setSaving(false)
@@ -53,7 +67,9 @@ export default function AdminPagesPage() {
       setError(data.error || 'Save failed')
       return
     }
-    setPages((prev) => prev.map((p) => (p.slug === selected ? { ...p, content } : p)))
+    setPages((prev) =>
+      prev.map((p) => (p.slug === selected ? { ...p, content, rows: payload.rows } : p))
+    )
     setMessage('Saved — live on the site now.')
   }
 
@@ -87,12 +103,73 @@ export default function AdminPagesPage() {
       </div>
 
       <section className="space-y-4 border border-vanilla-400 bg-vanilla-50 p-6">
-        <textarea
-          className="min-h-[320px] w-full rounded-[2px] border border-vanilla-400 bg-vanilla-100 p-4 text-ink"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Write the page content here. This replaces the built-in copy once saved."
-        />
+        <div>
+          <p className="text-sm font-semibold text-ink">
+            {selected === 'length-guide' ? 'Intro text' : 'Page text'}
+          </p>
+          <textarea
+            className="mt-2 min-h-[200px] w-full rounded-[2px] border border-vanilla-400 bg-vanilla-100 p-4 text-ink"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Write the page content here."
+          />
+        </div>
+
+        {selected === 'length-guide' && (
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-ink">Length table</p>
+              <p className="text-xs text-ink-muted">
+                These rows render as the styled table on the page — Length, where it sits, and
+                what it’s best for.
+              </p>
+            </div>
+            <div className="hidden gap-2 text-[11px] font-semibold uppercase tracking-widest text-violet-800 sm:grid sm:grid-cols-[90px_1fr_1fr_60px]">
+              <span>Length</span>
+              <span>Where it sits</span>
+              <span>Best for</span>
+              <span />
+            </div>
+            {rows.map((row, i) => (
+              <div key={i} className="grid gap-2 sm:grid-cols-[90px_1fr_1fr_60px]">
+                <input
+                  className="h-11 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-100 px-2 text-sm text-ink"
+                  value={row.inches}
+                  onChange={(e) => updateRow(i, { inches: e.target.value })}
+                  aria-label="Length"
+                />
+                <input
+                  className="h-11 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-100 px-2 text-sm text-ink"
+                  value={row.sits}
+                  onChange={(e) => updateRow(i, { sits: e.target.value })}
+                  aria-label="Where it sits"
+                />
+                <input
+                  className="h-11 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-100 px-2 text-sm text-ink"
+                  value={row.best}
+                  onChange={(e) => updateRow(i, { best: e.target.value })}
+                  aria-label="Best for"
+                />
+                <button
+                  type="button"
+                  onClick={() => setRows((prev) => prev.filter((_, idx) => idx !== i))}
+                  className="text-sm font-semibold text-cherry-700"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setRows((prev) => [...prev, { inches: '', sits: '', best: '' }])}
+            >
+              Add row
+            </Button>
+          </div>
+        )}
+
         {message && <p className="text-sm text-ink">{message}</p>}
         {error && <p className="text-sm text-cherry-700">{error}</p>}
         <Button type="button" variant="primary" loading={saving} onClick={save}>

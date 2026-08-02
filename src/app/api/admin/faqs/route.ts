@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { requireAdminSession } from '@/lib/auth/admin-session'
+import { STARTER_FAQS } from '@/lib/faqs'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
@@ -10,6 +11,11 @@ export async function GET() {
     await requireAdminSession()
   } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  // First visit: seed the starter set so the founder edits rows instead of retyping them.
+  const count = await prisma.faq.count()
+  if (count === 0) {
+    await prisma.faq.createMany({ data: STARTER_FAQS })
   }
   const faqs = await prisma.faq.findMany({
     orderBy: [{ category: 'asc' }, { sort_order: 'asc' }],

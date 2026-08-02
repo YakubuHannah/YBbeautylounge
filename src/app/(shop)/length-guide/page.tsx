@@ -1,19 +1,13 @@
 import { TextBlocks } from '@/components/content/text-blocks'
-import { getPageText } from '@/lib/pages'
+import { DEFAULT_PAGE_COPY, getLengthRows, getPageText } from '@/lib/pages'
 
 export const metadata = { title: 'Length guide' }
 
-const lengths = [
-  { inches: '12"', sits: 'Chin to collarbone', best: 'Bobs, low-maintenance days' },
-  { inches: '14"', sits: 'Collarbone', best: 'Shoulder polish without weight' },
-  { inches: '16"', sits: 'Upper chest', best: 'Everyday length, easy movement' },
-  { inches: '18"', sits: 'Mid chest', best: 'Versatile styling with presence' },
-  { inches: '20"', sits: 'Lower chest', best: 'Statement length, fuller read' },
-  { inches: '22"+', sits: 'Waist-bound', best: 'Drama — denser caps help' },
-]
-
 export default async function LengthGuidePage() {
-  const pageText = await getPageText('length-guide')
+  const [pageText, lengths] = await Promise.all([
+    getPageText('length-guide'),
+    getLengthRows(),
+  ])
   return (
     <main className="mx-auto max-w-3xl px-5 py-16 md:px-12">
       <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
@@ -21,14 +15,7 @@ export default async function LengthGuidePage() {
       </p>
       <h1 className="mt-2 font-display text-4xl text-ink">Length guide</h1>
       <div className="mt-4 max-w-xl space-y-3 text-ink-muted">
-        {pageText ? (
-          <TextBlocks text={pageText} />
-        ) : (
-          <p>
-            Same body landmarks, plain language. Density reads fuller on shorter units — say so
-            if you’re between sizes.
-          </p>
-        )}
+        <TextBlocks text={pageText || DEFAULT_PAGE_COPY['length-guide']} />
       </div>
 
       <div className="mt-10 overflow-hidden bg-vanilla-50">

@@ -1,44 +1,17 @@
+import { STARTER_FAQS } from '@/lib/faqs'
 import { prisma } from '@/lib/prisma'
 
 export const metadata = { title: 'FAQ' }
 
-const FALLBACK: { cat: string; items: { q: string; a: string }[] }[] = [
-  {
-    cat: 'Ordering',
-    items: [
-      {
-        q: 'Do I need an account to buy?',
-        a: 'No. Guest checkout uses your phone number as your customer record.',
-      },
-      {
-        q: 'Can I pay in parts?',
-        a: 'Yes — pay in full or 50% deposit with balance before dispatch.',
-      },
-    ],
-  },
-  {
-    cat: 'Delivery',
-    items: [
-      {
-        q: 'How fast is dispatch?',
-        a: 'Orders are dispatched within 3–5 working days.',
-      },
-      {
-        q: 'Is there free delivery?',
-        a: 'Free delivery applies from ₦200,000 subtotal.',
-      },
-    ],
-  },
-  {
-    cat: 'Restoration',
-    items: [
-      {
-        q: 'How does restoration work?',
-        a: 'Submit intake with photos, receive a quote, pay a deposit, and track status with a private link.',
-      },
-    ],
-  },
-]
+function groupFaqs(rows: { category: string; question: string; answer: string }[]) {
+  const groups = new Map<string, { q: string; a: string }[]>()
+  for (const row of rows) {
+    const list = groups.get(row.category) ?? []
+    list.push({ q: row.question, a: row.answer })
+    groups.set(row.category, list)
+  }
+  return Array.from(groups, ([cat, items]) => ({ cat, items }))
+}
 
 async function getFaqGroups() {
   try {
@@ -46,16 +19,9 @@ async function getFaqGroups() {
       where: { is_active: true },
       orderBy: [{ category: 'asc' }, { sort_order: 'asc' }],
     })
-    if (!rows.length) return FALLBACK
-    const groups = new Map<string, { q: string; a: string }[]>()
-    for (const row of rows) {
-      const list = groups.get(row.category) ?? []
-      list.push({ q: row.question, a: row.answer })
-      groups.set(row.category, list)
-    }
-    return Array.from(groups, ([cat, items]) => ({ cat, items }))
+    return groupFaqs(rows.length ? rows : STARTER_FAQS)
   } catch {
-    return FALLBACK
+    return groupFaqs(STARTER_FAQS)
   }
 }
 

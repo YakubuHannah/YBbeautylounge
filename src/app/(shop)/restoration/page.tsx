@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 import { TextBlocks } from '@/components/content/text-blocks'
-import { getPageText } from '@/lib/pages'
+import { DEFAULT_PAGE_COPY, getPageText } from '@/lib/pages'
 import { getWhatsAppNumber } from '@/lib/settings'
 import { whatsAppUrl } from '@/lib/whatsapp'
 
@@ -21,14 +21,7 @@ export default async function RestorationPage() {
           </p>
           <h1 className="mt-3 font-display text-4xl md:text-5xl">Wig revamp</h1>
           <div className="mx-auto mt-4 max-w-lg space-y-3 text-violet-200">
-            {pageText ? (
-              <TextBlocks text={pageText} />
-            ) : (
-              <p>
-                Capacity-bound work by the founder’s hands — quoted clearly, deposited through
-                the same order system, tracked without chasing.
-              </p>
-            )}
+            <TextBlocks text={pageText || DEFAULT_PAGE_COPY.restoration} />
           </div>
         </div>
       </section>
