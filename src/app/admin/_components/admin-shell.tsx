@@ -9,6 +9,7 @@ const links = [
   { href: '/admin/products', label: 'Products' },
   { href: '/admin/media', label: 'Media' },
   { href: '/admin/reviews', label: 'Reviews' },
+  { href: '/admin/restoration', label: 'Revamp' },
   { href: '/admin/pages', label: 'Pages' },
   { href: '/admin/faq', label: 'FAQ' },
   { href: '/admin/settings', label: 'Settings' },

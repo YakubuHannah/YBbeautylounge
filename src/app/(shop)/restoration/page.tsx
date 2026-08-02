@@ -1,16 +1,19 @@
 import Link from 'next/link'
 
 import { TextBlocks } from '@/components/content/text-blocks'
+import { formatNaira } from '@/lib/money'
 import { DEFAULT_PAGE_COPY, getPageText } from '@/lib/pages'
+import { getServiceTiers } from '@/lib/restoration'
 import { getWhatsAppNumber } from '@/lib/settings'
 import { whatsAppUrl } from '@/lib/whatsapp'
 
 export const metadata = { title: 'Restoration' }
 
 export default async function RestorationPage() {
-  const [whatsappNumber, pageText] = await Promise.all([
+  const [whatsappNumber, pageText, tiers] = await Promise.all([
     getWhatsAppNumber(),
     getPageText('restoration'),
+    getServiceTiers(),
   ])
   return (
     <main>
@@ -29,27 +32,17 @@ export default async function RestorationPage() {
       <section className="mx-auto max-w-6xl px-5 py-16 md:px-12">
         <h2 className="font-display text-3xl text-ink">Service tiers</h2>
         <div className="mt-8 grid gap-6 md:grid-cols-3">
-          {[
-            {
-              name: 'Basic revamp',
-              price: 'From ₦45,000',
-              blurb: 'Refresh, reshape, and restore comfort on a worn unit.',
-            },
-            {
-              name: 'Full restoration',
-              price: 'From ₦85,000',
-              blurb: 'Deeper reconstructive work where the hair still has life.',
-            },
-            {
-              name: 'Colour correction',
-              price: 'Quote on review',
-              blurb: 'Assessed from photos — quoted before any deposit.',
-            },
-          ].map((tier) => (
-            <div key={tier.name} className="border border-vanilla-400 bg-vanilla-50 p-6">
+          {tiers.map((tier) => (
+            <div key={tier.id ?? tier.name} className="border border-vanilla-400 bg-vanilla-50 p-6">
               <h3 className="font-display text-xl text-ink">{tier.name}</h3>
-              <p className="mt-2 font-semibold text-cherry-600">{tier.price}</p>
-              <p className="mt-3 text-sm text-ink-muted">{tier.blurb}</p>
+              <p className="mt-2 font-semibold text-cherry-600">
+                {tier.starting_price > 0
+                  ? `From ${formatNaira(tier.starting_price)}`
+                  : 'Quote on review'}
+              </p>
+              {tier.description && (
+                <p className="mt-3 text-sm text-ink-muted">{tier.description}</p>
+              )}
             </div>
           ))}
         </div>
