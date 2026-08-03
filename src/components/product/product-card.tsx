@@ -40,7 +40,10 @@ export function ProductCard({ product }: { product: PublicProduct }) {
         )}
         {product.review_count > 0 && (
           <p className="text-xs text-ink-muted">
-            {product.avg_rating.toFixed(1)} · {product.review_count} reviews
+            <span aria-hidden className="text-cherry-600">
+              {'★'.repeat(Math.max(1, Math.min(5, Math.round(product.avg_rating))))}
+            </span>{' '}
+            ({product.review_count})
           </p>
         )}
         {lowStock && (

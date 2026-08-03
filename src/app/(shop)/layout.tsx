@@ -4,18 +4,22 @@ import { SiteFooter } from '@/components/layout/site-footer'
 import { SiteHeader } from '@/components/layout/site-header'
 import { WhatsAppFloat } from '@/components/layout/whatsapp-float'
 import { SettingsProvider } from '@/components/settings/settings-provider'
+import { getActiveCategories } from '@/lib/products'
 import { getWhatsAppNumber } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
-  const whatsappNumber = await getWhatsAppNumber()
+  const [whatsappNumber, categories] = await Promise.all([
+    getWhatsAppNumber(),
+    getActiveCategories(),
+  ])
   return (
     <SettingsProvider settings={{ whatsapp_number: whatsappNumber }}>
       <CartProvider>
         <div className="flex min-h-screen flex-col">
           <AnnouncementBar />
-          <SiteHeader />
+          <SiteHeader categories={categories} />
           <div className="flex-1">{children}</div>
           <SiteFooter whatsappNumber={whatsappNumber} />
           <WhatsAppFloat number={whatsappNumber} />

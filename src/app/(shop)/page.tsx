@@ -3,85 +3,132 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { FitFloat } from '@/components/layout/fit-float'
 import { ProductCard } from '@/components/product/product-card'
+import { getRecentImages } from '@/lib/media'
 import { getActiveCategories, getActiveProducts } from '@/lib/products'
+import { getWhatsAppNumber } from '@/lib/settings'
+import { whatsAppUrl } from '@/lib/whatsapp'
 
 export const dynamic = 'force-dynamic'
 
-/** Static fallback tile images until a category has product photos of its own. */
-const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  hair: '/images/textures/bone-straight.jpg',
-}
+const TRUST_ITEMS: { icon: React.ReactNode; lines: [string, string] }[] = [
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">
+        <path d="M6 3h12l4 6-10 12L2 9l4-6z" />
+        <path d="M2 9h20M9 3l3 6 3-6M12 9v12" />
+      </svg>
+    ),
+    lines: ['100%', 'Human Hair'],
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">
+        <path d="M1 7h12v9H1zM13 10h5l3 3v3h-8z" />
+        <circle cx="5" cy="18" r="1.6" />
+        <circle cx="16" cy="18" r="1.6" />
+      </svg>
+    ),
+    lines: ['Dispatch in', '3–5 Working Days'],
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3c3 3 3 15 0 18-3-3-3-15 0-18z" />
+      </svg>
+    ),
+    lines: ['Worldwide', 'Delivery'],
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">
+        <path d="M12 3l2.7 5.8 6.3.7-4.7 4.3 1.3 6.2L12 16.9 6.4 20l1.3-6.2L3 9.5l6.3-.7L12 3z" />
+      </svg>
+    ),
+    lines: ['Reviews from', 'Verified Customers'],
+  },
+]
 
-const TRUST_ITEMS = [
-  '100% human hair',
-  'Dispatched within 3–5 working days',
-  'Worldwide delivery',
-  'Reviews from verified purchases',
+const STRIP_ITEMS: { title: string; sub: string }[] = [
+  { title: 'Custom fit', sub: 'Made to fit your unique measurements' },
+  { title: 'Expert craftsmanship', sub: 'Handcrafted by skilled wig experts' },
+  { title: 'Secure payments', sub: 'Every payment confirmed before dispatch' },
+  { title: 'Need help?', sub: 'Chat with our wig specialist on WhatsApp' },
 ]
 
 export default async function HomePage() {
-  const [products, categories] = await Promise.all([
+  const [products, categories, fillers, whatsappNumber] = await Promise.all([
     getActiveProducts(),
     getActiveCategories(),
+    getRecentImages(12),
+    getWhatsAppNumber(),
   ])
-  const featured = products.filter((p) => p.featured).slice(0, 3)
-  const show = featured.length ? featured : products.slice(0, 3)
+  const featured = products.filter((p) => p.featured)
+  const show = (featured.length ? featured : products).slice(0, 5)
+
+  let fillerIndex = 0
+  const nextFiller = () => (fillers.length ? fillers[fillerIndex++ % fillers.length] : null)
 
   const categoryTiles = categories.map((c) => {
     const productImage = products.find(
       (p) => p.category?.slug === c.slug && p.images[0]
     )?.images[0]
-    return {
-      ...c,
-      image: productImage
-        ? { url: productImage.url, focal_x: productImage.focal_x, focal_y: productImage.focal_y }
-        : CATEGORY_FALLBACK_IMAGES[c.slug]
-          ? { url: CATEGORY_FALLBACK_IMAGES[c.slug], focal_x: 50, focal_y: 50 }
-          : null,
-    }
+    const image = productImage ?? nextFiller()
+    return { ...c, image }
   })
+
+  const before = nextFiller()
+  const after = nextFiller()
 
   return (
     <main>
-      <section className="bg-vanilla-200 px-5 py-12 md:px-12 md:py-16">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.1fr_1fr]">
+      <section className="bg-vanilla-200 px-5 pb-16 pt-10 md:px-12">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_1fr]">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
               Luxury wigs. Made for you.
             </p>
-            <h1 className="mt-3 max-w-xl font-display text-4xl text-ink md:text-5xl">
+            <h1 className="mt-3 max-w-xl font-display text-4xl leading-tight text-ink md:text-6xl">
               Made for one head.
               <br />
-              Yours.
+              <em>Yours.</em>
             </h1>
-            <p className="mt-4 max-w-md text-base text-ink-muted">
+            <p className="mt-5 max-w-md text-base text-ink-muted">
               Custom human hair wigs that look natural, feel flawless and last longer.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/shop">
-                <Button variant="primary" className="h-12 px-8">
+                <Button variant="primary" className="h-12 px-8 uppercase tracking-wider">
                   Shop the collection
                 </Button>
               </Link>
-              <Link href="/find-my-fit">
-                <Button variant="secondary" className="h-12 px-8">
-                  Fit for your look
-                </Button>
-              </Link>
+              <a
+                href={whatsAppUrl(
+                  'Hi YBBeautylounge, I’d like to order a custom wig made to my measurements.',
+                  whatsappNumber
+                )}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-12 items-center rounded-[2px] border border-ink px-8 text-sm font-medium uppercase tracking-wider text-ink no-underline hover:bg-ink hover:text-vanilla-50 hover:no-underline"
+              >
+                Custom wigs
+              </a>
             </div>
-            <div className="mt-10 grid max-w-md grid-cols-2 gap-4">
+            <div className="mt-10 flex flex-wrap gap-8">
               {TRUST_ITEMS.map((item) => (
-                <p key={item} className="text-xs font-semibold text-ink">
-                  <span aria-hidden className="mr-1 text-violet-800">
-                    ✦
-                  </span>
-                  {item}
-                </p>
+                <div key={item.lines.join()} className="text-violet-800">
+                  {item.icon}
+                  <p className="mt-2 text-xs leading-tight text-ink">
+                    {item.lines[0]}
+                    <br />
+                    {item.lines[1]}
+                  </p>
+                </div>
               ))}
             </div>
           </div>
 
-          <div className="relative">
+          <div className="relative md:pr-24">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/hero-model.jpg"
@@ -90,15 +137,48 @@ export default async function HomePage() {
             />
             <Link
               href="/restoration"
-              className="mt-4 block border border-vanilla-400 bg-vanilla-50 p-5 no-underline hover:no-underline md:absolute md:-bottom-4 md:right-0 md:mt-0 md:max-w-[240px]"
+              className="mt-4 block w-full border border-vanilla-400 bg-vanilla-50 p-4 no-underline hover:no-underline md:absolute md:right-0 md:top-1/4 md:mt-0 md:w-[210px]"
             >
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
-                Hair restoration
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-ink">
+                Hair restoration.
+                <br />
+                Real confidence.
               </p>
-              <p className="mt-2 font-display text-lg leading-snug text-ink">
-                Worn today. Revived tomorrow.
-              </p>
-              <p className="mt-3 text-xs font-semibold text-cherry-600">
+              {before && after && (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div>
+                    <div className="aspect-[3/4] overflow-hidden bg-vanilla-200">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={before.url}
+                        alt={before.alt_text || 'Unit before restoration'}
+                        className="h-full w-full object-cover"
+                        style={{ objectPosition: `${before.focal_x}% ${before.focal_y}%` }}
+                        loading="lazy"
+                      />
+                    </div>
+                    <p className="mt-1 text-center text-[9px] font-semibold uppercase tracking-widest text-ink-muted">
+                      Before
+                    </p>
+                  </div>
+                  <div>
+                    <div className="aspect-[3/4] overflow-hidden bg-vanilla-200">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={after.url}
+                        alt={after.alt_text || 'Unit after restoration'}
+                        className="h-full w-full object-cover"
+                        style={{ objectPosition: `${after.focal_x}% ${after.focal_y}%` }}
+                        loading="lazy"
+                      />
+                    </div>
+                    <p className="mt-1 text-center text-[9px] font-semibold uppercase tracking-widest text-ink-muted">
+                      After
+                    </p>
+                  </div>
+                </div>
+              )}
+              <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-cherry-600">
                 See the transformation →
               </p>
             </Link>
@@ -106,66 +186,61 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-16 md:px-12 md:py-20">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
-              Shop by category
-            </p>
-            <h2 className="mt-2 font-display text-3xl text-ink">Find your fit</h2>
-          </div>
-          <Link href="/shop" className="text-sm font-semibold text-cherry-600">
-            View all
+      <section className="mx-auto max-w-6xl px-5 py-12 md:px-12 md:py-16">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-ink">
+            Shop by category
+          </p>
+          <Link href="/shop" className="text-xs font-semibold text-cherry-600">
+            View all categories
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="flex gap-3 overflow-x-auto pb-2">
           {categoryTiles.map((c) => (
             <Link
               key={c.slug}
               href={`/shop?category=${c.slug}`}
-              className="group block overflow-hidden bg-vanilla-50 no-underline hover:no-underline"
+              className="group relative block w-36 shrink-0 overflow-hidden bg-vanilla-200 no-underline hover:no-underline sm:w-40"
             >
-              {c.image ? (
-                <div className="aspect-square overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+              <div className="aspect-[4/5]">
+                {c.image && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={c.image.url}
-                    alt={`${c.name} from YBBeautylounge`}
+                    alt={`${c.name} — YBBeautylounge`}
                     className="h-full w-full object-cover"
                     style={{ objectPosition: `${c.image.focal_x}% ${c.image.focal_y}%` }}
                     loading="lazy"
                   />
-                </div>
-              ) : (
-                <div className="flex aspect-square items-center justify-center bg-vanilla-200" />
-              )}
-              <div className="px-4 py-4">
-                <p className="font-display text-lg text-ink group-hover:text-cherry-700">
-                  {c.name}
+                )}
+              </div>
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/80 to-transparent px-3 pb-3 pt-8">
+                <p className="text-sm font-semibold text-vanilla-50">{c.name}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-vanilla-200">
+                  Shop now →
                 </p>
-                <p className="text-xs font-semibold text-cherry-600">Shop now →</p>
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 pb-16 md:px-12 md:pb-24">
-        <div className="mb-10 flex items-end justify-between gap-4">
+      <section className="mx-auto max-w-6xl px-5 pb-16 md:px-12 md:pb-20">
+        <div className="mb-8 flex items-end justify-between gap-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
               Best sellers
             </p>
             <h2 className="mt-2 font-display text-3xl text-ink">Pieces worth keeping</h2>
           </div>
-          <Link href="/shop" className="text-sm font-semibold text-cherry-600">
-            View all
+          <Link href="/shop" className="text-xs font-semibold text-cherry-600">
+            View all products
           </Link>
         </div>
         {show.length === 0 ? (
           <p className="text-ink-muted">Products are being prepared.</p>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-5">
             {show.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -173,39 +248,30 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="bg-violet-800 px-5 py-16 text-vanilla-50 md:px-12 md:py-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-200">
-            Revamp and restoration
-          </p>
-          <h2 className="mt-3 font-display text-3xl md:text-4xl">Bring it back when it wears.</h2>
-          <p className="mx-auto mt-4 max-w-lg text-violet-200">
-            Send us a piece you already love. A clear quote before any work begins, and you can
-            follow its progress from your phone.
-          </p>
-          <div className="mt-8">
-            <Link
-              href="/restoration"
-              className="inline-flex h-12 items-center border border-vanilla-50 px-8 text-sm font-semibold text-vanilla-50 no-underline hover:bg-vanilla-50 hover:text-violet-800 hover:no-underline"
-            >
-              See how it works
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-5 py-16 md:px-12 md:py-24">
-        <div className="max-w-xl">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
-            Our story
-          </p>
-          <h2 className="mt-2 font-display text-3xl text-ink">The crown is not a metaphor.</h2>
-          <p className="mt-4 text-ink-muted">
-            There is a way a woman walks when her hair is right. You have seen it.
-          </p>
-          <Link href="/about" className="mt-6 inline-block text-sm font-semibold text-cherry-600">
-            Read the story
-          </Link>
+      <section className="bg-violet-800 px-5 py-10 text-vanilla-50 md:px-12">
+        <div className="mx-auto grid max-w-6xl gap-8 sm:grid-cols-2 md:grid-cols-4">
+          {STRIP_ITEMS.map((item) => (
+            <div key={item.title}>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-vanilla-50">
+                <span aria-hidden className="mr-1 text-violet-200">
+                  ✦
+                </span>
+                {item.title}
+              </p>
+              {item.title === 'Need help?' ? (
+                <a
+                  href={whatsAppUrl('Hi YBBeautylounge, I need help choosing.', whatsappNumber)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 block text-sm text-violet-200 underline"
+                >
+                  {item.sub}
+                </a>
+              ) : (
+                <p className="mt-2 text-sm text-violet-200">{item.sub}</p>
+              )}
+            </div>
+          ))}
         </div>
       </section>
 
