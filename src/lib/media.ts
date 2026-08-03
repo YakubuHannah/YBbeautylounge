@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 
 export type DisplayImage = {
   url: string
+  filename: string
   alt_text: string | null
   focal_x: number
   focal_y: number
@@ -14,7 +15,7 @@ export async function getRecentImages(limit = 12): Promise<DisplayImage[]> {
       where: { mime_type: { startsWith: 'image/' } },
       orderBy: { createdAt: 'desc' },
       take: limit,
-      select: { url: true, alt_text: true, focal_x: true, focal_y: true },
+      select: { url: true, filename: true, alt_text: true, focal_x: true, focal_y: true },
     })
   } catch {
     return []

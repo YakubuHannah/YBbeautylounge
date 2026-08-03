@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { requireAdminSession } from '@/lib/auth/admin-session'
+import { ensureDefaultCategories } from '@/lib/categories'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
@@ -18,22 +19,7 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  // First visit: seed the starting categories so there is something to assign.
-  const count = await prisma.collection.count()
-  if (count === 0) {
-    await prisma.collection.createMany({
-      data: [
-        { name: 'Hair', slug: 'hair', sort_order: 0, is_active: true, published_at: new Date() },
-        {
-          name: 'Accessories',
-          slug: 'accessories',
-          sort_order: 1,
-          is_active: true,
-          published_at: new Date(),
-        },
-      ],
-    })
-  }
+  await ensureDefaultCategories()
   const categories = await prisma.collection.findMany({
     orderBy: [{ sort_order: 'asc' }, { name: 'asc' }],
     include: { _count: { select: { products: true } } },

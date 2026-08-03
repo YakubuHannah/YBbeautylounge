@@ -1,3 +1,4 @@
+import { ensureDefaultCategories } from '@/lib/categories'
 import { prisma } from '@/lib/prisma'
 
 /** Public product shape — never includes cost_price (§19.2) */
@@ -161,6 +162,7 @@ export async function getActiveProducts(categorySlug?: string): Promise<PublicPr
 
 export async function getActiveCategories() {
   try {
+    await ensureDefaultCategories()
     return await prisma.collection.findMany({
       where: { is_active: true },
       orderBy: [{ sort_order: 'asc' }, { name: 'asc' }],

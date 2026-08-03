@@ -69,11 +69,27 @@ export default async function HomePage() {
   let fillerIndex = 0
   const nextFiller = () => (fillers.length ? fillers[fillerIndex++ % fillers.length] : null)
 
+  const staticTiles: Record<string, string> = {
+    'bone-straight': '/images/textures/bone-straight.jpg',
+    curly: '/images/textures/curly.jpg',
+    wavy: '/images/textures/wavy.jpg',
+    'bob-wigs': '/images/textures/bob.jpg',
+  }
+
   const categoryTiles = categories.map((c) => {
+    // Best photo for the tile: the category's own product photo, then a library
+    // photo whose name mentions the category, then the static texture shots.
     const productImage = products.find(
       (p) => p.category?.slug === c.slug && p.images[0]
     )?.images[0]
-    const image = productImage ?? nextFiller()
+    const keyword = c.name.split(' ')[0].toLowerCase()
+    const matchedFiller = fillers.find((f) =>
+      `${f.filename} ${f.alt_text ?? ''}`.toLowerCase().includes(keyword)
+    )
+    const staticImage = staticTiles[c.slug]
+      ? { url: staticTiles[c.slug], filename: c.slug, alt_text: c.name, focal_x: 50, focal_y: 50 }
+      : null
+    const image = productImage ?? matchedFiller ?? staticImage ?? nextFiller()
     return { ...c, image }
   })
 
