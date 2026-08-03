@@ -46,7 +46,7 @@ export default async function ProductPage({
         <h2 className="font-display text-2xl text-ink">Details</h2>
         <dl className="mt-6 grid gap-4 sm:grid-cols-2">
           {[
-            ['Texture', textureLabel(product.texture)],
+            ['Texture', textureLabel(product.texture) || '—'],
             ['Origin', product.hair_origin ?? '—'],
             ['Density', v?.density_percent ? `${v.density_percent}%` : '—'],
             ['Draw type', v?.draw_type?.replace(/_/g, ' ') ?? '—'],

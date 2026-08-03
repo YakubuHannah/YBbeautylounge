@@ -239,5 +239,6 @@ export function minPrice(product: PublicProduct): number | null {
 }
 
 export function textureLabel(texture: string): string {
+  if (texture === 'none') return ''
   return texture.replace(/_/g, ' ')
 }

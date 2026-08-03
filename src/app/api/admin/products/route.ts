@@ -62,9 +62,6 @@ export async function POST(req: Request) {
   if (!body.name?.trim()) {
     return NextResponse.json({ error: 'Name required' }, { status: 400 })
   }
-  if (!body.texture?.trim()) {
-    return NextResponse.json({ error: 'Texture required' }, { status: 400 })
-  }
 
   const variantInput = (body.variants || []).filter(
     (v) => v && (v.price != null || v.sku || v.length_inches)
@@ -85,7 +82,7 @@ export async function POST(req: Request) {
       name: body.name.trim(),
       slug,
       description: body.description || null,
-      texture: body.texture.trim(),
+      texture: body.texture?.trim() || 'none',
       hair_origin: body.hair_origin || null,
       care_instructions: body.care_instructions || null,
       status: body.status === 'active' ? 'active' : 'draft',

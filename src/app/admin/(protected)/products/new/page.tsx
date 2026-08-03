@@ -78,7 +78,7 @@ export default function NewProductPage() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [categoryId, setCategoryId] = useState('')
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
+  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([])
 
   useEffect(() => {
     fetch('/api/admin/categories')
@@ -98,8 +98,10 @@ export default function NewProductPage() {
       setError('Product name is required.')
       return
     }
-    if (!texture) {
-      setError('Please choose a texture.')
+    const categorySlug = categories.find((cat) => cat.id === categoryId)?.slug
+    const textureRequired = !categoryId || categorySlug === 'hair'
+    if (textureRequired && !texture) {
+      setError('Please choose a texture (required for hair products).')
       return
     }
     const hasPrice = variants.some((v) => Number(v.price_naira) > 0)
@@ -205,14 +207,13 @@ export default function NewProductPage() {
 
         <div className="grid gap-5 sm:grid-cols-2">
           <Field
-            label="Texture *"
-            help="Main look customers filter by. Choose one — bone straight is only one type, not a default."
+            label="Texture"
+            help="Required for hair. Leave unselected for accessories and other products."
           >
             <select
               className={inputClass}
               value={texture}
               onChange={(e) => setTexture(e.target.value)}
-              required
             >
               {TEXTURE_OPTIONS.map((o) => (
                 <option key={o.value || 'empty'} value={o.value}>

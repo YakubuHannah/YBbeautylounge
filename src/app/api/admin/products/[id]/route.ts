@@ -82,7 +82,7 @@ export async function PATCH(
       data: {
         name: body.name?.trim() ?? undefined,
         description: body.description !== undefined ? body.description : undefined,
-        texture: body.texture ?? undefined,
+        texture: body.texture !== undefined ? body.texture.trim() || 'none' : undefined,
         hair_origin: body.hair_origin !== undefined ? body.hair_origin : undefined,
         care_instructions:
           body.care_instructions !== undefined ? body.care_instructions : undefined,

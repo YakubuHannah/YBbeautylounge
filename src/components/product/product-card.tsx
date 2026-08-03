@@ -28,7 +28,7 @@ export function ProductCard({ product }: { product: PublicProduct }) {
       </div>
       <div className="mt-3 space-y-1">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
-          {textureLabel(product.texture)}
+          {textureLabel(product.texture) || product.category?.name}
         </p>
         <h3 className="min-h-[3.5rem] font-display text-lg text-ink group-hover:text-cherry-700">
           {product.name}
