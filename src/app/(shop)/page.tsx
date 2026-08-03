@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
+import { FitFloat } from '@/components/layout/fit-float'
 import { ProductCard } from '@/components/product/product-card'
 import { getActiveProducts } from '@/lib/products'
 
@@ -146,6 +147,8 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+
+      <FitFloat />
     </main>
   )
 }
