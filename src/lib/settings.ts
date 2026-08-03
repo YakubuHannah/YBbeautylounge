@@ -7,6 +7,8 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   bank_account_name: '',
   bank_account_number: '',
   notification_email: '',
+  restoration_before_media_id: '',
+  restoration_after_media_id: '',
 }
 
 export async function getSettingValue(key: string): Promise<string> {

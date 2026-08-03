@@ -7,13 +7,30 @@ import { Button } from '@/components/ui/button'
 import { TierEditor } from '../../_components/tier-editor'
 
 type LengthRow = { inches: string; sits: string; best: string }
-type EditablePage = { slug: string; label: string; content: string; rows?: LengthRow[] }
+type EditablePage = {
+  slug: string
+  label: string
+  content: string
+  rows?: LengthRow[]
+  gallery_media_ids?: string[]
+}
+type MediaAsset = {
+  id: string
+  url: string
+  filename: string
+  mime_type: string
+  alt_text: string | null
+}
 
 export default function AdminPagesPage() {
   const [pages, setPages] = useState<EditablePage[]>([])
   const [selected, setSelected] = useState('')
   const [content, setContent] = useState('')
   const [rows, setRows] = useState<LengthRow[]>([])
+  const [galleryIds, setGalleryIds] = useState<string[]>([])
+  const [media, setMedia] = useState<MediaAsset[]>([])
+  const [beforeId, setBeforeId] = useState('')
+  const [afterId, setAfterId] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -21,15 +38,27 @@ export default function AdminPagesPage() {
 
   useEffect(() => {
     async function load() {
-      const res = await fetch('/api/admin/pages')
-      const data = await res.json()
-      if (res.ok) {
+      const [pagesRes, mediaRes, settingsRes] = await Promise.all([
+        fetch('/api/admin/pages'),
+        fetch('/api/admin/media'),
+        fetch('/api/admin/settings'),
+      ])
+      const data = await pagesRes.json()
+      const mediaData = await mediaRes.json()
+      const settingsData = await settingsRes.json()
+      if (pagesRes.ok) {
         setPages(data.pages)
         if (data.pages.length) {
           setSelected(data.pages[0].slug)
           setContent(data.pages[0].content)
           setRows(data.pages[0].rows || [])
+          setGalleryIds(data.pages[0].gallery_media_ids || [])
         }
+      }
+      if (mediaRes.ok) setMedia(mediaData.assets || [])
+      if (settingsRes.ok) {
+        setBeforeId(settingsData.settings.restoration_before_media_id || '')
+        setAfterId(settingsData.settings.restoration_after_media_id || '')
       }
       setLoading(false)
     }
@@ -41,8 +70,32 @@ export default function AdminPagesPage() {
     setSelected(slug)
     setContent(page?.content || '')
     setRows(page?.rows || [])
+    setGalleryIds(page?.gallery_media_ids || [])
     setMessage('')
     setError('')
+  }
+
+  async function saveBeforeAfter(key: 'restoration_before_media_id' | 'restoration_after_media_id', id: string) {
+    setError('')
+    const current = key === 'restoration_before_media_id' ? beforeId : afterId
+    const value = current === id ? '' : id
+    const res = await fetch('/api/admin/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setError(data.error || 'Save failed')
+      return
+    }
+    if (key === 'restoration_before_media_id') setBeforeId(value)
+    else setAfterId(value)
+    setMessage('Before/after updated — live on the homepage now.')
+  }
+
+  function toggleGallery(id: string) {
+    setGalleryIds((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]))
   }
 
   function updateRow(index: number, patch: Partial<LengthRow>) {
@@ -53,11 +106,17 @@ export default function AdminPagesPage() {
     setSaving(true)
     setMessage('')
     setError('')
-    const payload: { slug: string; content: string; rows?: LengthRow[] } = {
+    const payload: {
+      slug: string
+      content: string
+      rows?: LengthRow[]
+      gallery_media_ids?: string[]
+    } = {
       slug: selected,
       content,
     }
     if (selected === 'length-guide') payload.rows = rows
+    if (selected === 'restoration') payload.gallery_media_ids = galleryIds
     const res = await fetch('/api/admin/pages', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -70,7 +129,11 @@ export default function AdminPagesPage() {
       return
     }
     setPages((prev) =>
-      prev.map((p) => (p.slug === selected ? { ...p, content, rows: payload.rows } : p))
+      prev.map((p) =>
+        p.slug === selected
+          ? { ...p, content, rows: payload.rows, gallery_media_ids: payload.gallery_media_ids }
+          : p
+      )
     )
     setMessage('Saved — live on the site now.')
   }
@@ -172,7 +235,110 @@ export default function AdminPagesPage() {
           </div>
         )}
 
-        {selected === 'restoration' && <TierEditor />}
+        {selected === 'restoration' && (
+          <>
+            <TierEditor />
+
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-ink">
+                  Before &amp; after (homepage card)
+                </p>
+                <p className="text-xs text-ink-muted">
+                  Tap “Before” or “After” under a photo — it saves instantly and shows on the
+                  homepage card. Tap again to unset. Upload new photos in Admin → Media.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {media
+                  .filter((m) => m.mime_type.startsWith('image/'))
+                  .map((m) => (
+                    <div key={m.id} className="space-y-1">
+                      <div
+                        className={`aspect-square overflow-hidden border-2 bg-vanilla-100 ${
+                          beforeId === m.id || afterId === m.id
+                            ? 'border-cherry-600'
+                            : 'border-vanilla-400'
+                        }`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={m.url}
+                          alt={m.alt_text || m.filename}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="flex gap-2 text-[10px] font-semibold uppercase tracking-wider">
+                        <button
+                          type="button"
+                          onClick={() => saveBeforeAfter('restoration_before_media_id', m.id)}
+                          className={beforeId === m.id ? 'text-cherry-700 underline' : 'text-ink-muted'}
+                        >
+                          Before
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => saveBeforeAfter('restoration_after_media_id', m.id)}
+                          className={afterId === m.id ? 'text-cherry-700 underline' : 'text-ink-muted'}
+                        >
+                          After
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-ink">
+                  Transformation gallery (this page)
+                </p>
+                <p className="text-xs text-ink-muted">
+                  Tap to add or remove — photos and videos both work, shown in the order you
+                  tap. Hit Save page when done.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {media.map((m) => {
+                  const idx = galleryIds.indexOf(m.id)
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => toggleGallery(m.id)}
+                      className={`relative border-2 bg-vanilla-100 text-left ${
+                        idx >= 0 ? 'border-cherry-600' : 'border-vanilla-400'
+                      }`}
+                    >
+                      {m.mime_type.startsWith('video/') ? (
+                        <video
+                          src={m.url}
+                          className="aspect-square w-full object-cover"
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={m.url}
+                          alt={m.alt_text || m.filename}
+                          className="aspect-square w-full object-cover"
+                        />
+                      )}
+                      {idx >= 0 && (
+                        <span className="absolute right-1 top-1 bg-cherry-600 px-1.5 text-[10px] font-bold text-vanilla-50">
+                          #{idx + 1}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </>
+        )}
 
         {message && <p className="text-sm text-ink">{message}</p>}
         {error && <p className="text-sm text-cherry-700">{error}</p>}

@@ -3,17 +3,18 @@ import Link from 'next/link'
 import { TextBlocks } from '@/components/content/text-blocks'
 import { formatNaira } from '@/lib/money'
 import { DEFAULT_PAGE_COPY, getPageText } from '@/lib/pages'
-import { getServiceTiers } from '@/lib/restoration'
+import { getRestorationGallery, getServiceTiers } from '@/lib/restoration'
 import { getWhatsAppNumber } from '@/lib/settings'
 import { whatsAppUrl } from '@/lib/whatsapp'
 
 export const metadata = { title: 'Restoration' }
 
 export default async function RestorationPage() {
-  const [whatsappNumber, pageText, tiers] = await Promise.all([
+  const [whatsappNumber, pageText, tiers, gallery] = await Promise.all([
     getWhatsAppNumber(),
     getPageText('restoration'),
     getServiceTiers(),
+    getRestorationGallery(),
   ])
   return (
     <main>
@@ -47,6 +48,38 @@ export default async function RestorationPage() {
           ))}
         </div>
       </section>
+
+      {gallery.length > 0 && (
+        <section className="mx-auto max-w-6xl px-5 pb-16 md:px-12">
+          <h2 className="font-display text-3xl text-ink">Transformations</h2>
+          <p className="mt-2 max-w-xl text-ink-muted">
+            Real pieces, revived by hand.
+          </p>
+          <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {gallery.map((m) =>
+              m.mime_type.startsWith('video/') ? (
+                <video
+                  key={m.id}
+                  src={m.url}
+                  className="aspect-[4/5] w-full bg-vanilla-50 object-cover"
+                  controls
+                  preload="metadata"
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={m.id}
+                  src={m.url}
+                  alt={m.alt_text || 'Wig transformation by YBBeautylounge'}
+                  className="aspect-[4/5] w-full bg-vanilla-50 object-cover"
+                  style={{ objectPosition: `${m.focal_x}% ${m.focal_y}%` }}
+                  loading="lazy"
+                />
+              )
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="bg-vanilla-200 px-5 py-16 md:px-12">
         <div className="mx-auto max-w-xl">

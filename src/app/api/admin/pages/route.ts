@@ -34,6 +34,7 @@ export async function GET() {
       label: string
       content: string
       rows?: LengthRow[]
+      gallery_media_ids?: string[]
     } = {
       slug: def.slug,
       label: def.label,
@@ -47,6 +48,14 @@ export async function GET() {
           : null
       result.rows =
         Array.isArray(savedRows) && savedRows.length ? savedRows : DEFAULT_LENGTH_ROWS
+    }
+    if (def.slug === 'restoration') {
+      const galleryBlock = row?.blocks.find((b) => b.block_type === 'gallery')
+      const savedIds =
+        galleryBlock && typeof galleryBlock.content === 'object' && galleryBlock.content !== null
+          ? (galleryBlock.content as { media_ids?: unknown }).media_ids
+          : null
+      result.gallery_media_ids = Array.isArray(savedIds) ? savedIds.map(String) : []
     }
     return result
   })
@@ -65,6 +74,7 @@ export async function PATCH(req: Request) {
     slug?: string
     content?: string
     rows?: { inches?: string; sits?: string; best?: string }[]
+    gallery_media_ids?: string[]
   }
   const def = EDITABLE_PAGES.find((p) => p.slug === body.slug)
   if (!def) {
@@ -73,6 +83,14 @@ export async function PATCH(req: Request) {
   const content = String(body.content ?? '')
   if (content.length > 20000) {
     return NextResponse.json({ error: 'Content is too long' }, { status: 400 })
+  }
+
+  let galleryIds: string[] | null = null
+  if (def.slug === 'restoration' && Array.isArray(body.gallery_media_ids)) {
+    if (body.gallery_media_ids.length > 40) {
+      return NextResponse.json({ error: 'Up to 40 gallery items' }, { status: 400 })
+    }
+    galleryIds = body.gallery_media_ids.map(String).filter(Boolean)
   }
 
   let tableRows: LengthRow[] | null = null
@@ -121,6 +139,16 @@ export async function PATCH(req: Request) {
         },
       })
     }
+    if (galleryIds) {
+      await tx.pageBlock.create({
+        data: {
+          page_id: page.id,
+          block_type: 'gallery',
+          content: { media_ids: galleryIds },
+          sort_order: 2,
+        },
+      })
+    }
     await tx.auditLog.create({
       data: {
         actor_id: admin.adminId,
@@ -128,7 +156,11 @@ export async function PATCH(req: Request) {
         action: 'page.update',
         entity_type: 'page',
         entity_id: def.slug,
-        after_value: { text: content, rows: tableRows ?? undefined },
+        after_value: {
+          text: content,
+          rows: tableRows ?? undefined,
+          gallery_media_ids: galleryIds ?? undefined,
+        },
       },
     })
   })

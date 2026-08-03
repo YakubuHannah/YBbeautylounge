@@ -5,6 +5,7 @@ import { FitFloat } from '@/components/layout/fit-float'
 import { ProductCard } from '@/components/product/product-card'
 import { getRecentImages } from '@/lib/media'
 import { getActiveCategories, getActiveProducts } from '@/lib/products'
+import { getBeforeAfterImages } from '@/lib/restoration'
 import { getWhatsAppNumber } from '@/lib/settings'
 import { whatsAppUrl } from '@/lib/whatsapp'
 
@@ -57,11 +58,12 @@ const STRIP_ITEMS: { title: string; sub: string }[] = [
 ]
 
 export default async function HomePage() {
-  const [products, categories, fillers, whatsappNumber] = await Promise.all([
+  const [products, categories, fillers, whatsappNumber, beforeAfter] = await Promise.all([
     getActiveProducts(),
     getActiveCategories(),
     getRecentImages(12),
     getWhatsAppNumber(),
+    getBeforeAfterImages(),
   ])
   const featured = products.filter((p) => p.featured)
   const show = (featured.length ? featured : products).slice(0, 5)
@@ -93,8 +95,19 @@ export default async function HomePage() {
     return { ...c, image }
   })
 
-  const before = nextFiller()
-  const after = nextFiller()
+  // Founder-selected photos (Admin → Pages → Wig revamp), else the built-in pair.
+  const before = beforeAfter.before ?? {
+    url: '/images/restoration-before.jpg',
+    alt_text: 'Worn bob unit before restoration',
+    focal_x: 50,
+    focal_y: 50,
+  }
+  const after = beforeAfter.after ?? {
+    url: '/images/restoration-after.jpg',
+    alt_text: 'The same bob unit after restoration, sleek and full',
+    focal_x: 50,
+    focal_y: 50,
+  }
 
   return (
     <main>
@@ -160,7 +173,7 @@ export default async function HomePage() {
                 <br />
                 Real confidence.
               </p>
-              {before && after && (
+              {(
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <div>
                     <div className="aspect-[3/4] overflow-hidden bg-vanilla-200">
