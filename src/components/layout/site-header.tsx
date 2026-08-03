@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { useCart } from '@/components/cart/cart-provider'
 
 const menuLinks = [
-  { href: '/shop', label: 'Shop' },
+  { href: '/shop', label: 'Shop all' },
   { href: '/find-my-fit', label: 'Fit for your look' },
   { href: '/length-guide', label: 'Length guide' },
   { href: '/restoration', label: 'Wig revamp' },
@@ -16,11 +16,7 @@ const menuLinks = [
   { href: '/contact', label: 'Contact' },
 ]
 
-export function SiteHeader({
-  categories = [],
-}: {
-  categories?: { name: string; slug: string }[]
-}) {
+export function SiteHeader() {
   const { itemCount } = useCart()
   const [open, setOpen] = useState(false)
 
@@ -54,27 +50,17 @@ export function SiteHeader({
       </div>
 
       <nav className="hidden items-center justify-center gap-6 border-t border-vanilla-400 px-5 py-3 text-[11px] font-semibold uppercase tracking-widest md:flex">
-        <Link
-          href="/shop"
-          className="text-ink no-underline hover:text-cherry-600 hover:no-underline"
-        >
-          Shop all
-        </Link>
-        {categories.map((c) => (
-          <Link
-            key={c.slug}
-            href={`/shop?category=${c.slug}`}
-            className="text-ink-muted no-underline hover:text-cherry-600 hover:no-underline"
-          >
-            {c.name}
-          </Link>
-        ))}
-        <Link
-          href="/restoration"
-          className="text-ink-muted no-underline hover:text-cherry-600 hover:no-underline"
-        >
-          Restoration
-        </Link>
+        {menuLinks
+          .filter((item) => item.href !== '/contact')
+          .map((item, i) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`${i === 0 ? 'text-ink' : 'text-ink-muted'} no-underline hover:text-cherry-600 hover:no-underline`}
+            >
+              {item.label}
+            </Link>
+          ))}
       </nav>
 
       {open && (
