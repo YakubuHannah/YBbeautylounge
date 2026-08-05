@@ -51,23 +51,60 @@ export default function AdminMediaPage() {
     setUploading(true)
     setError('')
     setMessage('')
-    const form = new FormData()
-    form.append('file', pendingFile)
-    form.append('alt_text', pendingFile.name)
-    const res = await fetch('/api/admin/media', { method: 'POST', body: form })
-    const data = await res.json()
-    setUploading(false)
-    if (!res.ok) {
-      setError(
-        data.error ||
-          'Upload failed. If it mentions Supabase keys, add them in Vercel (see steps below on this page).'
-      )
-      return
+    try {
+      // 1. Ask the server for a signed upload URL
+      const prep = await fetch('/api/admin/media/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: pendingFile.name, size: pendingFile.size }),
+      })
+      const prepData = await prep.json()
+      if (!prep.ok) {
+        setError(
+          prepData.error ||
+            'Upload failed. If it mentions Supabase keys, add them in Vercel (see steps below on this page).'
+        )
+        return
+      }
+
+      // 2. Send the file straight to storage — it never passes through the site server,
+      // so large videos are fine
+      const put = await fetch(prepData.signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': pendingFile.type || 'application/octet-stream' },
+        body: pendingFile,
+      })
+      if (!put.ok) {
+        setError('Upload to storage failed. Check your connection and try again.')
+        return
+      }
+
+      // 3. Record it in the library
+      const res = await fetch('/api/admin/media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: prepData.path,
+          filename: pendingFile.name,
+          mime_type: pendingFile.type,
+          file_size: pendingFile.size,
+          alt_text: pendingFile.name,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Uploaded, but saving to the library failed. Try again.')
+        return
+      }
+      setMessage('Media uploaded and saved.')
+      setPendingFile(null)
+      setPreview(null)
+      load()
+    } catch {
+      setError('Upload failed. Check your connection and try again.')
+    } finally {
+      setUploading(false)
     }
-    setMessage('Media uploaded and saved.')
-    setPendingFile(null)
-    setPreview(null)
-    load()
   }
 
   function updateAlt(id: string, alt: string) {

@@ -9,6 +9,27 @@ export function getSupabaseAdmin() {
   })
 }
 
+// Direct browser→Supabase upload path. Vercel caps function request bodies at
+// 4.5MB, so large files (videos) must bypass the API route entirely.
+export async function createSignedMediaUpload(filename: string, folder = 'products') {
+  const supabase = getSupabaseAdmin()
+  if (!supabase) {
+    throw new Error(
+      'Media storage not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.'
+    )
+  }
+
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'media'
+  const ext = filename.split('.').pop()?.toLowerCase() || 'jpg'
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path)
+  if (error) throw new Error(error.message)
+
+  const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path)
+  return { signedUrl: data.signedUrl, path, publicUrl: pub.publicUrl }
+}
+
 export async function uploadMediaFile(file: File, folder = 'products') {
   const supabase = getSupabaseAdmin()
   if (!supabase) {

@@ -34,7 +34,33 @@ export async function POST(req: Request) {
       url?: string
       alt_text?: string
       filename?: string
+      path?: string
+      mime_type?: string
+      file_size?: number
     }
+
+    // Finalize a direct browser→Supabase upload (see /api/admin/media/upload-url)
+    if (body.path) {
+      const supabase = getSupabaseAdmin()
+      if (!supabase) {
+        return NextResponse.json({ error: 'Media storage not configured' }, { status: 500 })
+      }
+      const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'media'
+      const { data: pub } = supabase.storage.from(bucket).getPublicUrl(body.path)
+      const asset = await prisma.mediaAsset.create({
+        data: {
+          filename: body.filename || body.path.split('/').pop() || 'media',
+          url: pub.publicUrl,
+          thumbnail_url: pub.publicUrl,
+          mime_type: body.mime_type || 'application/octet-stream',
+          file_size: body.file_size || 0,
+          alt_text: body.alt_text || null,
+          uploaded_by_admin_id: admin.adminId,
+        },
+      })
+      return NextResponse.json({ asset })
+    }
+
     if (!body.url) {
       return NextResponse.json({ error: 'url required' }, { status: 400 })
     }
