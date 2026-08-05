@@ -161,7 +161,7 @@ export default async function HomePage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/hero-model.jpg"
-              alt="Body wave unit worn full and flowing"
+              alt="Ginger straight unit worn long and sleek"
               className="mx-auto h-auto w-full max-w-md mix-blend-multiply"
             />
             <Link
