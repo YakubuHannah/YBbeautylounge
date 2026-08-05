@@ -112,9 +112,9 @@ export default async function HomePage() {
 
   return (
     <main>
-      <section className="bg-vanilla-200 px-5 pb-16 pt-10 md:px-12">
+      <section className="bg-vanilla-200 px-5 pb-12 pt-10 md:px-12 md:pb-0">
         <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_1fr]">
-          <div>
+          <div className="md:pb-14">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
               Luxury wigs. Made for you.
             </p>
@@ -158,16 +158,16 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="relative md:pr-24">
+          <div className="relative md:self-end md:pr-24">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/hero-model.webp"
               alt="Ginger straight unit worn long and sleek"
-              className="mx-auto h-auto w-full max-w-md"
+              className="mx-auto block h-auto w-full max-w-sm"
             />
             <Link
               href="/restoration"
-              className="mt-4 block w-full border border-vanilla-400 bg-vanilla-50 p-4 no-underline hover:no-underline md:absolute md:right-0 md:top-[45%] md:mt-0 md:w-[210px]"
+              className="mt-4 block w-full border border-vanilla-400 bg-vanilla-50 p-4 no-underline hover:no-underline md:absolute md:right-0 md:top-[55%] md:mt-0 md:w-[210px]"
             >
               <p className="text-[11px] font-semibold uppercase tracking-widest text-ink">
                 Hair restoration.
