@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { getActiveProducts, minPrice } from '@/lib/products'
+import { firstPhoto, getActiveProducts, minPrice } from '@/lib/products'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
@@ -49,19 +49,22 @@ export async function GET(req: Request) {
   const picks = [...otherCategory, ...rest].slice(0, 4)
 
   return NextResponse.json({
-    recommendations: picks.map((p) => ({
-      name: p.name,
-      slug: p.slug,
-      category: p.category?.name ?? null,
-      price: minPrice(p),
-      image: p.images[0]
-        ? {
-            url: p.images[0].url,
-            alt_text: p.images[0].alt_text,
-            focal_x: p.images[0].focal_x,
-            focal_y: p.images[0].focal_y,
-          }
-        : null,
-    })),
+    recommendations: picks.map((p) => {
+      const photo = firstPhoto(p.images)
+      return {
+        name: p.name,
+        slug: p.slug,
+        category: p.category?.name ?? null,
+        price: minPrice(p),
+        image: photo
+          ? {
+              url: photo.url,
+              alt_text: photo.alt_text,
+              focal_x: photo.focal_x,
+              focal_y: photo.focal_y,
+            }
+          : null,
+      }
+    }),
   })
 }

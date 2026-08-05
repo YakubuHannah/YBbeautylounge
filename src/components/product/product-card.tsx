@@ -1,21 +1,22 @@
 import Link from 'next/link'
 
 import { formatNaira } from '@/lib/money'
-import { minPrice, textureLabel, type PublicProduct } from '@/lib/products'
+import { firstPhoto, minPrice, textureLabel, type PublicProduct } from '@/lib/products'
 
 export function ProductCard({ product }: { product: PublicProduct }) {
   const price = minPrice(product)
   const lowStock = product.variants.some(
     (v) => v.stock_quantity > 0 && v.stock_quantity <= 2
   )
-  const image = product.images[0]
+  const image = firstPhoto(product.images)
+  const video = image ? null : product.images[0]
 
   return (
     <Link
       href={`/shop/${product.slug}`}
       className="group block no-underline hover:no-underline"
     >
-      <div className="aspect-square overflow-hidden bg-vanilla-50">
+      <div className="aspect-[4/5] overflow-hidden bg-vanilla-50">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -23,6 +24,14 @@ export function ProductCard({ product }: { product: PublicProduct }) {
             alt={image.alt_text || product.name}
             className="h-full w-full object-cover"
             style={{ objectPosition: `${image.focal_x}% ${image.focal_y}%` }}
+          />
+        ) : video ? (
+          <video
+            src={video.url}
+            className="h-full w-full object-cover"
+            muted
+            playsInline
+            preload="metadata"
           />
         ) : null}
       </div>

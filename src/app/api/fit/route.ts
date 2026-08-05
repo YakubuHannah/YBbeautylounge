@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 
-import { getActiveProducts, textureLabel } from '@/lib/products'
+import { firstPhoto, getActiveProducts, textureLabel } from '@/lib/products'
 
 export const dynamic = 'force-dynamic'
 
@@ -125,16 +125,17 @@ export async function POST(req: Request) {
     .map((rec) => {
       const product = pool.find((p) => p.slug === rec.slug)
       if (!product) return null
+      const photo = firstPhoto(product.images)
       return {
         slug: product.slug,
         name: product.name,
         texture: textureLabel(product.texture),
-        image: product.images[0]
+        image: photo
           ? {
-              url: product.images[0].url,
-              alt_text: product.images[0].alt_text,
-              focal_x: product.images[0].focal_x,
-              focal_y: product.images[0].focal_y,
+              url: photo.url,
+              alt_text: photo.alt_text,
+              focal_x: photo.focal_x,
+              focal_y: photo.focal_y,
             }
           : null,
         reason: rec.reason,

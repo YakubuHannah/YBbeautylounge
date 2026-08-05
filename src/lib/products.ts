@@ -26,6 +26,12 @@ export type PublicImage = {
   sort_order: number
   focal_x: number
   focal_y: number
+  mime_type: string
+}
+
+/** First attachment that an <img> can render — videos need a <video> element. */
+export function firstPhoto(images: PublicImage[]): PublicImage | undefined {
+  return images.find((img) => !img.mime_type.startsWith('video/'))
 }
 
 export type PublicProduct = {
@@ -110,7 +116,13 @@ function mapProduct(p: {
     id: string
     sort_order: number
     alt_text: string | null
-    media_asset: { url: string; alt_text: string | null; focal_x: number; focal_y: number }
+    media_asset: {
+      url: string
+      alt_text: string | null
+      focal_x: number
+      focal_y: number
+      mime_type: string
+    }
   }[]
   collections: { collection: { name: string; slug: string; is_active: boolean } }[]
 }): PublicProduct {
@@ -133,6 +145,7 @@ function mapProduct(p: {
       sort_order: img.sort_order,
       focal_x: img.media_asset.focal_x,
       focal_y: img.media_asset.focal_y,
+      mime_type: img.media_asset.mime_type,
     })),
     category: (() => {
       const active = p.collections.find((c) => c.collection.is_active)

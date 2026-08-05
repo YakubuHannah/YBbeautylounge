@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { FitFloat } from '@/components/layout/fit-float'
 import { ProductCard } from '@/components/product/product-card'
 import { getRecentImages } from '@/lib/media'
-import { getActiveCategories, getActiveProducts } from '@/lib/products'
+import { firstPhoto, getActiveCategories, getActiveProducts } from '@/lib/products'
 import { getBeforeAfterImages } from '@/lib/restoration'
 import { getWhatsAppNumber } from '@/lib/settings'
 import { whatsAppUrl } from '@/lib/whatsapp'
@@ -81,9 +81,10 @@ export default async function HomePage() {
   const categoryTiles = categories.map((c) => {
     // Best photo for the tile: the category's own product photo, then a library
     // photo whose name mentions the category, then the static texture shots.
-    const productImage = products.find(
-      (p) => p.category?.slug === c.slug && p.images[0]
-    )?.images[0]
+    const productImage = products
+      .filter((p) => p.category?.slug === c.slug)
+      .map((p) => firstPhoto(p.images))
+      .find(Boolean)
     const keyword = c.name.split(' ')[0].toLowerCase()
     const matchedFiller = fillers.find((f) =>
       `${f.filename} ${f.alt_text ?? ''}`.toLowerCase().includes(keyword)
