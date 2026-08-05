@@ -160,13 +160,13 @@ export default async function HomePage() {
           <div className="relative md:pr-24">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/images/hero-model.jpg"
+              src="/images/hero-model.webp"
               alt="Ginger straight unit worn long and sleek"
-              className="mx-auto h-auto w-full max-w-md mix-blend-multiply"
+              className="mx-auto h-auto w-full max-w-md"
             />
             <Link
               href="/restoration"
-              className="mt-4 block w-full border border-vanilla-400 bg-vanilla-50 p-4 no-underline hover:no-underline md:absolute md:right-0 md:top-1/4 md:mt-0 md:w-[210px]"
+              className="mt-4 block w-full border border-vanilla-400 bg-vanilla-50 p-4 no-underline hover:no-underline md:absolute md:right-0 md:top-[45%] md:mt-0 md:w-[210px]"
             >
               <p className="text-[11px] font-semibold uppercase tracking-widest text-ink">
                 Hair restoration.
