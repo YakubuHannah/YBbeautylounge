@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 
 /** Founder-editable settings (§12). Defaults apply until a row exists. */
 export const SETTING_DEFAULTS: Record<string, string> = {
+  announcement_text: 'Free delivery on orders from ₦200,000',
   whatsapp_number: '2349037844700',
   bank_name: '',
   bank_account_name: '',

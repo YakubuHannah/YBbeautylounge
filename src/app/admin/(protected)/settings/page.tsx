@@ -12,6 +12,17 @@ const SECTIONS: {
   fields: { key: string; label: string; help: string; placeholder: string }[]
 }[] = [
   {
+    title: 'Announcement bar',
+    fields: [
+      {
+        key: 'announcement_text',
+        label: 'Message',
+        help: 'The strip at the very top of the site. A "Shop the collection" link always follows it.',
+        placeholder: 'Free delivery on orders from ₦200,000',
+      },
+    ],
+  },
+  {
     title: 'WhatsApp',
     fields: [
       {

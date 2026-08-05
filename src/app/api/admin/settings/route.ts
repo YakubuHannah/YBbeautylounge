@@ -7,6 +7,8 @@ import { SETTING_DEFAULTS } from '@/lib/settings'
 export const dynamic = 'force-dynamic'
 
 const VALIDATORS: Record<string, (value: string) => string | null> = {
+  announcement_text: (value) =>
+    value.trim().length > 120 ? 'Keep the announcement under 120 characters.' : null,
   whatsapp_number: (value) => {
     const digits = value.replace(/\D/g, '')
     if (!/^234\d{10}$/.test(digits)) {

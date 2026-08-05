@@ -6,6 +6,18 @@ import type { PublicImage } from '@/lib/products'
 
 const isVideo = (img: PublicImage) => img.mime_type.startsWith('video/')
 
+function PlayBadge() {
+  return (
+    <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/60 text-vanilla-50">
+        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden>
+          <path d="M8 5.5v13l11-6.5z" />
+        </svg>
+      </span>
+    </span>
+  )
+}
+
 export function ProductGallery({ images, name }: { images: PublicImage[]; name: string }) {
   const [current, setCurrent] = useState(0)
   const [zoomed, setZoomed] = useState(false)
@@ -52,19 +64,22 @@ export function ProductGallery({ images, name }: { images: PublicImage[]; name: 
               key={img.id}
               type="button"
               onClick={() => setCurrent(i)}
-              className={`aspect-[4/5] overflow-hidden bg-vanilla-50 ${
+              className={`relative aspect-[4/5] overflow-hidden bg-vanilla-50 ${
                 i === current ? 'ring-2 ring-cherry-600' : ''
               }`}
               aria-label={`View ${isVideo(img) ? 'video' : 'image'} ${i + 1}`}
             >
               {isVideo(img) ? (
-                <video
-                  src={img.url}
-                  className="pointer-events-none h-full w-full object-cover"
-                  muted
-                  playsInline
-                  preload="metadata"
-                />
+                <>
+                  <video
+                    src={img.url}
+                    className="pointer-events-none h-full w-full object-cover"
+                    muted
+                    playsInline
+                    preload="metadata"
+                  />
+                  <PlayBadge />
+                </>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
