@@ -113,7 +113,7 @@ export default async function HomePage() {
   return (
     <main>
       <section className="bg-vanilla-200 px-5 pb-12 pt-10 md:px-12 md:py-0">
-        <div className="mx-auto grid max-w-6xl items-center gap-6 md:h-[500px] md:grid-cols-[1.05fr_1fr]">
+        <div className="mx-auto grid max-w-6xl items-center gap-6 md:h-[520px] md:grid-cols-[1.05fr_1fr]">
           <div className="md:py-8">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
               Luxury wigs. Made for you.
@@ -230,7 +230,7 @@ export default async function HomePage() {
             <Link
               key={c.slug}
               href={`/shop?category=${c.slug}`}
-              className="group relative block w-36 shrink-0 overflow-hidden bg-vanilla-200 no-underline hover:no-underline sm:w-40"
+              className="group relative block w-36 shrink-0 overflow-hidden bg-vanilla-200 no-underline hover:no-underline sm:w-40 md:w-auto md:min-w-[110px] md:flex-1"
             >
               <div className="aspect-[4/5]">
                 {c.image && (
