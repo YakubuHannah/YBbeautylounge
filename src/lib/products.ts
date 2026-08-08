@@ -168,7 +168,10 @@ export async function getActiveProducts(categorySlug?: string): Promise<PublicPr
       include: productInclude,
     })
     return rows.map(mapProduct)
-  } catch {
+  } catch (e) {
+    // Surface DB errors (e.g. connection exhaustion) instead of hiding them as
+    // "no products" — otherwise a broken connection looks like an empty shop.
+    console.error('getActiveProducts failed', e)
     return []
   }
 }
@@ -181,7 +184,8 @@ export async function getActiveCategories() {
       orderBy: [{ sort_order: 'asc' }, { name: 'asc' }],
       select: { name: true, slug: true },
     })
-  } catch {
+  } catch (e) {
+    console.error('getActiveCategories failed', e)
     return []
   }
 }

@@ -3,8 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // App runtime uses DATABASE_URL (set this to the transaction pooler, port
+  // 6543, ?pgbouncer=true&connection_limit=1 — serverless-safe). Migrations use
+  // DIRECT_URL (the direct/session connection, port 5432).
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Customer {
