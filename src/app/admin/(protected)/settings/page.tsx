@@ -75,6 +75,8 @@ export default function AdminSettingsPage() {
   const [savingKey, setSavingKey] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<{ ok: boolean; text: string } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -103,6 +105,24 @@ export default function AdminSettingsPage() {
     }
     setValues((prev) => ({ ...prev, [key]: data.setting.value }))
     setMessage('Saved — live across the site now.')
+  }
+
+  async function sendTestEmail() {
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const res = await fetch('/api/admin/settings/test-email', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setTestResult({ ok: true, text: `Sent to ${data.to}. Check the inbox — and the spam/Promotions tabs.` })
+      } else {
+        setTestResult({ ok: false, text: data.error || 'Test failed.' })
+      }
+    } catch {
+      setTestResult({ ok: false, text: 'Could not reach the server. Try again.' })
+    } finally {
+      setTesting(false)
+    }
   }
 
   if (loading) return <p className="text-ink-muted">Loading settings…</p>
@@ -149,6 +169,24 @@ export default function AdminSettingsPage() {
           ))}
         </section>
       ))}
+
+      <section className="space-y-4 border border-vanilla-400 bg-vanilla-50 p-6">
+        <div>
+          <h2 className="font-display text-xl">Test order alerts</h2>
+          <p className="text-xs text-ink-muted">
+            Sends a test email to the notification address above using the exact code that runs when
+            an order is placed. Save the email first, then test — no need to place a real order.
+          </p>
+        </div>
+        <Button type="button" variant="secondary" size="sm" loading={testing} onClick={sendTestEmail}>
+          Send test email
+        </Button>
+        {testResult && (
+          <p className={`text-sm ${testResult.ok ? 'text-ink' : 'text-cherry-700'}`}>
+            {testResult.text}
+          </p>
+        )}
+      </section>
     </div>
   )
 }
