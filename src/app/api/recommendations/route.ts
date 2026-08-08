@@ -35,18 +35,31 @@ export async function GET(req: Request) {
   }
 
   const all = await getActiveProducts()
+  const isWholesale = (p: (typeof all)[number]) => {
+    const c = `${p.category?.name ?? ''} ${p.category?.slug ?? ''}`.toLowerCase()
+    return c.includes('wholesale') || c.includes('whole sale') || c.includes('whole-sale')
+  }
+  const isCareKit = (p: (typeof all)[number]) => {
+    const s = `${p.name} ${p.slug}`.toLowerCase()
+    return s.includes('care kit') || s.includes('care-kit') || s.includes('maintenance')
+  }
+
+  // Recommend add-ons the cart doesn't already have. Never the wholesale deal
+  // (not a retail add-on); always lead with the Wig Care Kit when in stock.
   const inStock = all.filter(
     (p) =>
       !cartProductIds.includes(p.id) &&
+      !isWholesale(p) &&
       p.variants.some((v) => v.is_active && v.stock_quantity > 0)
   )
 
-  // Prefer products from categories the cart doesn't already contain.
-  const otherCategory = inStock.filter(
+  const careKit = inStock.find(isCareKit)
+  const others = inStock.filter((p) => p !== careKit)
+  const otherCategory = others.filter(
     (p) => p.category && !cartCategorySlugs.has(p.category.slug)
   )
-  const rest = inStock.filter((p) => !otherCategory.includes(p))
-  const picks = [...otherCategory, ...rest].slice(0, 4)
+  const rest = others.filter((p) => !otherCategory.includes(p))
+  const picks = [...(careKit ? [careKit] : []), ...otherCategory, ...rest].slice(0, 4)
 
   return NextResponse.json({
     recommendations: picks.map((p) => {
