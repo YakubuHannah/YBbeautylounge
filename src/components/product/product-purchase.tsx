@@ -168,9 +168,26 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
           href={whatsAppUrl(`Hi, I’m interested in ${product.name} (${label}).`, whatsapp_number)}
           target="_blank"
           rel="noreferrer"
-          className="flex h-12 w-full items-center justify-center rounded-[2px] border border-ink text-sm font-semibold text-ink no-underline hover:bg-ink hover:text-vanilla-50 hover:no-underline"
+          className="flex w-full items-center justify-center gap-3 rounded-[2px] border border-ink px-4 py-3 text-ink no-underline transition-colors hover:bg-ink hover:text-vanilla-50 hover:no-underline"
         >
-          Ask on WhatsApp
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            aria-hidden="true"
+            className="h-5 w-5 shrink-0"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3 21l2.1-5.4A8.5 8.5 0 1121 11.5z"
+            />
+          </svg>
+          <span className="text-left">
+            <span className="block text-sm font-semibold">Chat with stylist</span>
+            <span className="block text-xs opacity-70">Get help choosing your perfect wig</span>
+          </span>
         </a>
       </div>
     </div>
