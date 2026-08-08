@@ -76,7 +76,9 @@ export async function POST(req: Request) {
 
   const openai = new OpenAI()
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    // Set OPENAI_FIT_MODEL in Vercel to use a different model without a deploy.
+    // Whatever you choose must support image input and json_schema output.
+    model: process.env.OPENAI_FIT_MODEL || 'gpt-4o',
     max_tokens: 2048,
     messages: [
       {
