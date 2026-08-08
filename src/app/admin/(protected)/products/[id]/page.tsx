@@ -68,6 +68,8 @@ export default function AdminProductEditPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [texture, setTexture] = useState('')
+  const [hairOrigin, setHairOrigin] = useState('')
+  const [careInstructions, setCareInstructions] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
   const [status, setStatus] = useState('draft')
@@ -101,6 +103,8 @@ export default function AdminProductEditPage() {
       setName(p.name)
       setDescription(p.description || '')
       setTexture(p.texture || '')
+      setHairOrigin(p.hair_origin || '')
+      setCareInstructions(p.care_instructions || '')
       setCategoryId(p.collections?.[0]?.collection_id || '')
       setStatus(p.status)
       setFeatured(p.featured)
@@ -182,6 +186,8 @@ export default function AdminProductEditPage() {
         name,
         description,
         texture,
+        hair_origin: hairOrigin.trim() || null,
+        care_instructions: careInstructions.trim() || null,
         status,
         featured,
         category_id: categoryId || null,
@@ -276,9 +282,19 @@ export default function AdminProductEditPage() {
             onChange={(e) => setDescription(e.target.value)}
           />
         </Field>
+        <Field label="Care instructions" help="How to wash and keep the hair. Shown under Care on the product page.">
+          <textarea
+            className={`${inputClass} h-28 py-3`}
+            value={careInstructions}
+            onChange={(e) => setCareInstructions(e.target.value)}
+          />
+        </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Texture" help="Main filter customers use.">
             <input className={inputClass} value={texture} onChange={(e) => setTexture(e.target.value)} />
+          </Field>
+          <Field label="Origin" help="Where the hair is from, e.g. Vietnamese, Cambodian.">
+            <input className={inputClass} value={hairOrigin} onChange={(e) => setHairOrigin(e.target.value)} />
           </Field>
           <Field label="Status" help="Draft is hidden. Active is live.">
             <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -404,6 +420,13 @@ export default function AdminProductEditPage() {
                   className={inputClass}
                   value={v.density_percent}
                   onChange={(e) => updateVariant(i, { density_percent: e.target.value })}
+                />
+              </Field>
+              <Field label="Draw type" help="e.g. single drawn, double drawn, SDD">
+                <input
+                  className={inputClass}
+                  value={v.draw_type}
+                  onChange={(e) => updateVariant(i, { draw_type: e.target.value })}
                 />
               </Field>
               <Field label="Weight (g)">
