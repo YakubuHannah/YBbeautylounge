@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/components/cart/cart-provider'
 import { formatNaira } from '@/lib/money'
-import { textureLabel, type PublicProduct } from '@/lib/products'
+import { firstPhoto, textureLabel, type PublicProduct } from '@/lib/products'
 import { whatsAppUrl } from '@/lib/whatsapp'
 import { usePublicSettings } from '@/components/settings/settings-provider'
 
@@ -58,6 +58,7 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
         productSlug: product.slug,
         variantLabel: label,
         unitPrice: variant.price,
+        image: firstPhoto(product.images)?.url ?? null,
       },
       qty
     )

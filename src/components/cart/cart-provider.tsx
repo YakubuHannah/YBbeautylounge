@@ -16,6 +16,7 @@ export type CartLine = {
   productSlug: string
   variantLabel: string
   unitPrice: number
+  image: string | null
   quantity: number
 }
 

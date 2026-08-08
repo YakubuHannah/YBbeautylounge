@@ -61,7 +61,19 @@ export default function CartPage() {
       <ul className="mt-8 space-y-6">
         {lines.map((line) => (
           <li key={line.variantId} className="flex gap-4 border-b border-vanilla-400 pb-6">
-            <div className="h-24 w-20 shrink-0 bg-vanilla-50" />
+            <Link
+              href={`/shop/${line.productSlug}`}
+              className="h-24 w-20 shrink-0 overflow-hidden bg-vanilla-50"
+            >
+              {line.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={line.image}
+                  alt={line.productName}
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </Link>
             <div className="min-w-0 flex-1">
               <Link
                 href={`/shop/${line.productSlug}`}
