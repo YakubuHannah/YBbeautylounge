@@ -106,7 +106,8 @@ export function FitFinder() {
             </div>
           )}
           <p className="text-xs text-ink-muted">
-            Your photo is analysed once to suggest styles and is never stored.
+            Your photo is sent to our AI stylist (powered by OpenAI) to read your face shape. It is
+            used only for this suggestion and is never saved by YBBeautylounge.
           </p>
           {error && <p className="text-sm text-cherry-700">{error}</p>}
           <Button
