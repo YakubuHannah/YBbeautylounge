@@ -15,23 +15,12 @@ export async function GET(req: Request) {
     .slice(0, 30)
 
   let cartProductIds: string[] = []
-  const cartCategorySlugs = new Set<string>()
   if (exclude.length) {
     const variants = await prisma.productVariant.findMany({
       where: { id: { in: exclude } },
-      select: {
-        product_id: true,
-        product: {
-          select: {
-            collections: { select: { collection: { select: { slug: true } } } },
-          },
-        },
-      },
+      select: { product_id: true },
     })
     cartProductIds = variants.map((v) => v.product_id)
-    for (const v of variants) {
-      for (const c of v.product.collections) cartCategorySlugs.add(c.collection.slug)
-    }
   }
 
   const all = await getActiveProducts()
@@ -53,13 +42,33 @@ export async function GET(req: Request) {
       p.variants.some((v) => v.is_active && v.stock_quantity > 0)
   )
 
-  const careKit = inStock.find(isCareKit)
-  const others = inStock.filter((p) => p !== careKit)
-  const otherCategory = others.filter(
-    (p) => p.category && !cartCategorySlugs.has(p.category.slug)
-  )
-  const rest = others.filter((p) => !otherCategory.includes(p))
-  const picks = [...(careKit ? [careKit] : []), ...otherCategory, ...rest].slice(0, 4)
+  const isAccessory = (p: (typeof all)[number]) => {
+    const c = `${p.category?.name ?? ''} ${p.category?.slug ?? ''}`.toLowerCase()
+    return c.includes('accessor') || isCareKit(p)
+  }
+  const shuffle = <T>(arr: T[]): T[] => {
+    const a = [...arr]
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[a[i], a[j]] = [a[j], a[i]]
+    }
+    return a
+  }
+
+  // Two accessories (the Wig Care Kit lives here) + two best-seller hair pieces.
+  // Shuffled per request, so different shoppers see different picks.
+  const accessories = shuffle(inStock.filter(isAccessory))
+  const hair = inStock.filter((p) => !isAccessory(p))
+  const featuredHair = hair.filter((p) => p.featured)
+  const bestSellers = shuffle(featuredHair.length ? featuredHair : hair)
+
+  let picks = [...accessories.slice(0, 2)]
+  picks.push(...bestSellers.filter((p) => !picks.includes(p)).slice(0, 2))
+  if (picks.length < 4) {
+    const filler = shuffle(inStock.filter((p) => !picks.includes(p)))
+    picks = [...picks, ...filler].slice(0, 4)
+  }
+  picks = picks.slice(0, 4)
 
   return NextResponse.json({
     recommendations: picks.map((p) => {
