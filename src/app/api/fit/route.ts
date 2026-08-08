@@ -87,9 +87,11 @@ export async function POST(req: Request) {
           'You are the in-house stylist for YBBeautylounge, a premium Nigerian wig brand. ' +
           'A customer shares a photo of their face. Assess the face shape and the features ' +
           'that matter for choosing a wig (face length-to-width, jawline, forehead, cheekbones), ' +
-          'then recommend the 2–3 pieces from the catalogue that would frame their face best. ' +
-          'Only recommend slugs that appear in the catalogue. Write warmly and specifically — ' +
-          'this is styling advice, not a verdict. Never comment negatively on appearance.',
+          'then RANK EVERY piece in the catalogue from the best match for this face to the least. ' +
+          'Include ALL pieces — do not leave any out — with the strongest match first, and give ' +
+          'each a short, warm reason for its position. Only use slugs that appear in the catalogue. ' +
+          'Write warmly and specifically — this is styling advice, not a verdict. Never comment ' +
+          'negatively on appearance.',
       },
       {
         role: 'user',
@@ -150,7 +152,6 @@ export async function POST(req: Request) {
       }
     })
     .filter(Boolean)
-    .slice(0, 3)
 
   return NextResponse.json({
     face_shape: result.face_shape,

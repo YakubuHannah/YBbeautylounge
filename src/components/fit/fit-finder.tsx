@@ -172,13 +172,13 @@ export function FitFinder() {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
-            {result.recommendations.map((rec) => (
+            {result.recommendations.map((rec, i) => (
               <Link
                 key={rec.slug}
                 href={`/shop/${rec.slug}`}
                 className="group block no-underline hover:no-underline"
               >
-                <div className="aspect-square overflow-hidden bg-vanilla-50">
+                <div className="relative aspect-square overflow-hidden bg-vanilla-50">
                   {rec.image && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -187,6 +187,11 @@ export function FitFinder() {
                       className="h-full w-full object-cover"
                       style={{ objectPosition: `${rec.image.focal_x}% ${rec.image.focal_y}%` }}
                     />
+                  )}
+                  {i === 0 && (
+                    <span className="absolute left-3 top-3 bg-cherry-600 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-vanilla-50">
+                      Top match
+                    </span>
                   )}
                 </div>
                 <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-violet-800">
