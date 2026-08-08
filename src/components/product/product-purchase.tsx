@@ -37,6 +37,20 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
   const instalment = Math.round(variant.price / 4)
   const deposit = Math.round(variant.price / 2)
 
+  // Hair details for the selected option, empties dropped so the highlight
+  // stays clean. Origin is product-level; the rest follow the chosen variant.
+  const specs: [string, string][] = (
+    [
+      ['Texture', textureLabel(product.texture)],
+      ['Origin', product.hair_origin ?? ''],
+      ['Density', variant.density_percent ? `${variant.density_percent}%` : ''],
+      ['Draw type', variant.draw_type?.replace(/_/g, ' ') ?? ''],
+      ['Lace / net', [variant.lace_type, variant.lace_size].filter(Boolean).join(' · ')],
+      ['Cap size', variant.cap_size ?? ''],
+      ['Weight', variant.weight_grams ? `${variant.weight_grams}g` : ''],
+    ] as [string, string][]
+  ).filter(([, val]) => val)
+
   function handleAdd() {
     addItem(
       {
@@ -66,6 +80,19 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
           or 4 payments of {formatNaira(instalment)} · or {formatNaira(deposit)} today, balance
           before dispatch
         </p>
+
+        {specs.length > 0 && (
+          <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+            {specs.map(([k, val]) => (
+              <div key={k} className="flex items-baseline gap-2">
+                <dt className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+                  {k}
+                </dt>
+                <dd className="text-sm text-ink">{val}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </div>
 
       <div className="space-y-3">

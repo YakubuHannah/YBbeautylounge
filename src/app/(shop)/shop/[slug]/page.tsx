@@ -5,11 +5,7 @@ import { FitFloat } from '@/components/layout/fit-float'
 import { ProductGallery } from '@/components/product/product-gallery'
 import { ProductPurchase } from '@/components/product/product-purchase'
 import { ReviewForm } from '@/components/product/review-form'
-import {
-  getApprovedReviews,
-  getProductBySlug,
-  textureLabel,
-} from '@/lib/products'
+import { getApprovedReviews, getProductBySlug } from '@/lib/products'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +17,6 @@ export default async function ProductPage({
   const product = await getProductBySlug(params.slug)
   if (!product) notFound()
 
-  const v = product.variants[0]
   const reviews = await getApprovedReviews(product.id)
   const images = product.images
 
@@ -44,28 +39,8 @@ export default async function ProductPage({
       </div>
 
       <section className="mt-16 border-t border-vanilla-400 pt-12">
-        <h2 className="font-display text-2xl text-ink">Details</h2>
-        <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-          {[
-            ['Texture', textureLabel(product.texture) || '—'],
-            ['Origin', product.hair_origin ?? '—'],
-            ['Density', v?.density_percent ? `${v.density_percent}%` : '—'],
-            ['Draw type', v?.draw_type?.replace(/_/g, ' ') ?? '—'],
-            ['Lace / net', [v?.lace_type, v?.lace_size].filter(Boolean).join(' · ') || '—'],
-            ['Cap size', v?.cap_size ?? '—'],
-            ['Weight', v?.weight_grams ? `${v.weight_grams}g` : '—'],
-          ].map(([k, val]) => (
-            <div key={k} className="border-b border-vanilla-400 pb-3">
-              <dt className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
-                {k}
-              </dt>
-              <dd className="mt-1 text-ink">{val}</dd>
-            </div>
-          ))}
-        </dl>
-
         {product.description && (
-          <div className="mt-10 max-w-2xl">
+          <div className="max-w-2xl">
             <h3 className="font-display text-xl text-ink">Description</h3>
             <p className="mt-3 text-ink-muted">{product.description}</p>
           </div>
