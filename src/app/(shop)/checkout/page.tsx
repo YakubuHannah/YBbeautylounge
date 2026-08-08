@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
@@ -39,11 +39,27 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState('')
   const [state, setState] = useState('Lagos')
   const [address, setAddress] = useState('')
+  const [zones, setZones] = useState<
+    { id: string; name: string; fee: number; estimated_days: string }[]
+  >([])
+  const [zoneId, setZoneId] = useState('')
+  const [freeThreshold, setFreeThreshold] = useState(0)
   const [plan, setPlan] = useState<'full' | 'deposit_50'>('full')
   const [marketing, setMarketing] = useState(false)
   const [screenshot, setScreenshot] = useState<File | null>(null)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetch('/api/delivery')
+      .then((r) => r.json())
+      .then((d) => {
+        setZones(d.zones || [])
+        setFreeThreshold(Number(d.free_delivery_threshold) || 0)
+        if (d.zones?.[0]) setZoneId((prev) => prev || d.zones[0].id)
+      })
+      .catch(() => {})
+  }, [])
 
   async function placeOrder(e: React.FormEvent) {
     e.preventDefault()
@@ -58,6 +74,7 @@ export default function CheckoutPage() {
         email,
         state,
         address,
+        delivery_zone_id: zoneId,
         plan,
         marketing,
         items: lines.map((l) => ({ variant_id: l.variantId, quantity: l.quantity })),
@@ -251,6 +268,10 @@ export default function CheckoutPage() {
     )
   }
 
+  const selectedZone = zones.find((z) => z.id === zoneId)
+  const deliveryDue = freeThreshold > 0 && subtotal >= freeThreshold ? 0 : selectedZone?.fee ?? 0
+  const orderTotal = subtotal + deliveryDue
+
   return (
     <main className="mx-auto max-w-xl px-5 py-10 md:px-12 md:py-16">
       <h1 className="font-display text-3xl text-ink">Checkout</h1>
@@ -299,6 +320,20 @@ export default function CheckoutPage() {
               <option key={s}>{s}</option>
             ))}
           </select>
+          {zones.length > 0 && (
+            <select
+              value={zoneId}
+              onChange={(e) => setZoneId(e.target.value)}
+              aria-label="Delivery location"
+              className="h-12 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-50 px-3"
+            >
+              {zones.map((z) => (
+                <option key={z.id} value={z.id}>
+                  {z.name} — {formatNaira(z.fee)}
+                </option>
+              ))}
+            </select>
+          )}
           <textarea
             required
             placeholder="Delivery address"
@@ -320,7 +355,7 @@ export default function CheckoutPage() {
               checked={plan === 'full'}
               onChange={() => setPlan('full')}
             />
-            Pay in full · {formatNaira(subtotal)}
+            Pay in full · {formatNaira(orderTotal)}
           </label>
           <label className="flex items-center gap-3 text-sm">
             <input
@@ -351,6 +386,21 @@ export default function CheckoutPage() {
             <span>Subtotal</span>
             <span className="font-semibold tabular-nums">{formatNaira(subtotal)}</span>
           </div>
+          <div className="mt-2 flex justify-between text-sm">
+            <span>Delivery{selectedZone ? ` · ${selectedZone.name}` : ''}</span>
+            <span className="font-semibold tabular-nums">
+              {deliveryDue === 0 ? 'Free' : formatNaira(deliveryDue)}
+            </span>
+          </div>
+          <div className="mt-2 flex justify-between border-t border-vanilla-400 pt-2 text-sm">
+            <span>Total</span>
+            <span className="font-semibold tabular-nums">{formatNaira(orderTotal)}</span>
+          </div>
+          {plan === 'deposit_50' && deliveryDue > 0 && (
+            <p className="mt-2 text-xs text-ink-muted">
+              Delivery is added to your balance, due before dispatch.
+            </p>
+          )}
           <p className="mt-2 text-xs text-ink-muted">
             The exact amount is confirmed on the next step, priced from our records — never from
             your browser.

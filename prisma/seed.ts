@@ -25,7 +25,7 @@ async function main() {
     data: [
       { key: 'vat_rate', value: 7.5, value_type: 'number' },
       { key: 'vat_inclusive', value: false, value_type: 'boolean' },
-      { key: 'free_delivery_threshold', value: 200000, value_type: 'number' },
+      { key: 'free_delivery_threshold', value: 20000000, value_type: 'number' }, // kobo = ₦200,000
       { key: 'deposit_percentage', value: 50, value_type: 'number' },
       { key: 'restoration_capacity_cap', value: 5, value_type: 'number' },
       { key: 'referral_referee_discount', value: 5000, value_type: 'number' },
@@ -41,12 +41,12 @@ async function main() {
     skipDuplicates: true
   })
 
+  // Delivery fees are kobo (rule 6). Founder edits these in Admin → Delivery.
   await prisma.deliveryZone.createMany({
     data: [
-      { name: 'Lagos', states: ['Lagos'], fee: 0, estimated_days: '1-2' },
-      { name: 'South-West', states: ['Ogun', 'Oyo', 'Osun', 'Ondo', 'Ekiti'], fee: 2000, estimated_days: '2-4' },
-      { name: 'Other Nigeria', states: [], fee: 3000, estimated_days: '3-5' },
-      { name: 'International', states: ['Ghana', 'UK', 'US'], fee: 10000, estimated_days: '7-14' }
+      { name: 'Lagos Mainland', states: ['Lagos'], fee: 350000, estimated_days: '1-2' },
+      { name: 'Lagos Island', states: ['Lagos'], fee: 450000, estimated_days: '1-2' },
+      { name: 'Outside Lagos', states: [], fee: 500000, estimated_days: '3-5' }
     ],
     skipDuplicates: true
   })
