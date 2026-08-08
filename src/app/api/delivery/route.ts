@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server'
 
-import { getDeliveryZones, getFreeDeliveryThreshold } from '@/lib/delivery'
+import { getDeliveryPricing } from '@/lib/delivery'
 
 export const dynamic = 'force-dynamic'
 
-// Public: the checkout reads zones and the free-delivery threshold to show the
-// fee. Named fields only (rule 4) — the fee is public, cost fields are not here.
+// Public: the checkout reads the delivery prices to show the fee. Named fields
+// only (rule 4). The server still re-prices every order from these values.
 export async function GET() {
-  const [zones, free_delivery_threshold] = await Promise.all([
-    getDeliveryZones(),
-    getFreeDeliveryThreshold(),
-  ])
-  return NextResponse.json({ zones, free_delivery_threshold })
+  const pricing = await getDeliveryPricing()
+  return NextResponse.json(pricing)
 }

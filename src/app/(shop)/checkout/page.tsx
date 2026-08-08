@@ -19,6 +19,7 @@ const states = [
   'Abuja',
   'Rivers',
   'Other',
+  'International',
 ]
 
 type PlacedOrder = {
@@ -39,11 +40,14 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState('')
   const [state, setState] = useState('Lagos')
   const [address, setAddress] = useState('')
-  const [zones, setZones] = useState<
-    { id: string; name: string; fee: number; estimated_days: string }[]
-  >([])
-  const [zoneId, setZoneId] = useState('')
-  const [freeThreshold, setFreeThreshold] = useState(0)
+  const [lagosArea, setLagosArea] = useState<'mainland' | 'island'>('mainland')
+  const [otherState, setOtherState] = useState('')
+  const [pricing, setPricing] = useState({
+    delivery_lagos_mainland: 0,
+    delivery_lagos_island: 0,
+    delivery_other_states: 0,
+    free_delivery_threshold: 0,
+  })
   const [plan, setPlan] = useState<'full' | 'deposit_50'>('full')
   const [marketing, setMarketing] = useState(false)
   const [screenshot, setScreenshot] = useState<File | null>(null)
@@ -54,9 +58,7 @@ export default function CheckoutPage() {
     fetch('/api/delivery')
       .then((r) => r.json())
       .then((d) => {
-        setZones(d.zones || [])
-        setFreeThreshold(Number(d.free_delivery_threshold) || 0)
-        if (d.zones?.[0]) setZoneId((prev) => prev || d.zones[0].id)
+        if (d && typeof d.delivery_other_states === 'number') setPricing(d)
       })
       .catch(() => {})
   }, [])
@@ -72,9 +74,9 @@ export default function CheckoutPage() {
         name,
         phone,
         email,
-        state,
+        state: stateForRecord,
         address,
-        delivery_zone_id: zoneId,
+        delivery_zone: zoneKey,
         plan,
         marketing,
         items: lines.map((l) => ({ variant_id: l.variantId, quantity: l.quantity })),
@@ -268,8 +270,26 @@ export default function CheckoutPage() {
     )
   }
 
-  const selectedZone = zones.find((z) => z.id === zoneId)
-  const deliveryDue = freeThreshold > 0 && subtotal >= freeThreshold ? 0 : selectedZone?.fee ?? 0
+  const isInternational = state === 'International'
+  const zoneKey =
+    state === 'Lagos'
+      ? lagosArea === 'island'
+        ? 'lagos_island'
+        : 'lagos_mainland'
+      : isInternational
+        ? 'international'
+        : 'other_states'
+  const stateForRecord = state === 'Other' ? otherState : state
+  const baseFee =
+    zoneKey === 'lagos_mainland'
+      ? pricing.delivery_lagos_mainland
+      : zoneKey === 'lagos_island'
+        ? pricing.delivery_lagos_island
+        : zoneKey === 'other_states'
+          ? pricing.delivery_other_states
+          : 0
+  const threshold = pricing.free_delivery_threshold
+  const deliveryDue = isInternational ? 0 : threshold > 0 && subtotal >= threshold ? 0 : baseFee
   const orderTotal = subtotal + deliveryDue
 
   return (
@@ -314,26 +334,47 @@ export default function CheckoutPage() {
           <select
             value={state}
             onChange={(e) => setState(e.target.value)}
+            aria-label="Delivery location"
             className="h-12 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-50 px-3"
           >
             {states.map((s) => (
               <option key={s}>{s}</option>
             ))}
           </select>
-          {zones.length > 0 && (
+
+          {state === 'Lagos' && (
             <select
-              value={zoneId}
-              onChange={(e) => setZoneId(e.target.value)}
-              aria-label="Delivery location"
+              value={lagosArea}
+              onChange={(e) => setLagosArea(e.target.value as 'mainland' | 'island')}
+              aria-label="Lagos area"
               className="h-12 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-50 px-3"
             >
-              {zones.map((z) => (
-                <option key={z.id} value={z.id}>
-                  {z.name} — {formatNaira(z.fee)}
-                </option>
-              ))}
+              <option value="mainland">
+                Lagos Mainland — {formatNaira(pricing.delivery_lagos_mainland)}
+              </option>
+              <option value="island">
+                Lagos Island — {formatNaira(pricing.delivery_lagos_island)}
+              </option>
             </select>
           )}
+
+          {state === 'Other' && (
+            <input
+              required
+              placeholder="Type your state"
+              value={otherState}
+              onChange={(e) => setOtherState(e.target.value)}
+              className="h-12 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-50 px-3"
+            />
+          )}
+
+          {isInternational && (
+            <p className="rounded-[2px] bg-vanilla-200 px-4 py-3 text-sm text-ink">
+              International delivery price depends on the shipment and is paid directly to the
+              courier. We’ll reach out to arrange it after your order.
+            </p>
+          )}
+
           <textarea
             required
             placeholder="Delivery address"
@@ -387,9 +428,9 @@ export default function CheckoutPage() {
             <span className="font-semibold tabular-nums">{formatNaira(subtotal)}</span>
           </div>
           <div className="mt-2 flex justify-between text-sm">
-            <span>Delivery{selectedZone ? ` · ${selectedZone.name}` : ''}</span>
+            <span>Delivery</span>
             <span className="font-semibold tabular-nums">
-              {deliveryDue === 0 ? 'Free' : formatNaira(deliveryDue)}
+              {isInternational ? 'Paid on delivery' : deliveryDue === 0 ? 'Free' : formatNaira(deliveryDue)}
             </span>
           </div>
           <div className="mt-2 flex justify-between border-t border-vanilla-400 pt-2 text-sm">

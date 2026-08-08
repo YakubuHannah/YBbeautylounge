@@ -1,41 +1,80 @@
-import { prisma } from '@/lib/prisma'
 import { getSettingValue } from '@/lib/settings'
 
-/** Money is kobo (§ money rules). ₦200,000 free-delivery default. */
-export const FREE_DELIVERY_THRESHOLD_DEFAULT = 20_000_000
-/** Guardrails for admin-entered delivery money (rule 9). */
+/** Money is kobo (rule 6). Defaults apply until the founder sets a price. */
+export const DELIVERY_DEFAULTS = {
+  delivery_lagos_mainland: 350_000, // ₦3,500
+  delivery_lagos_island: 450_000, // ₦4,500
+  delivery_other_states: 500_000, // ₦5,000
+  free_delivery_threshold: 20_000_000, // ₦200,000
+} as const
+
+export type DeliverySettingKey = keyof typeof DELIVERY_DEFAULTS
+
+/** Guardrails for admin-entered money (rule 9). */
 export const MAX_DELIVERY_FEE = 10_000_000 // ₦100,000
 export const MAX_FREE_DELIVERY_THRESHOLD = 100_000_000 // ₦1,000,000
 
-export type DeliveryZonePublic = {
-  id: string
-  name: string
-  fee: number
-  estimated_days: string
+// The zones the customer can pick. "international" is paid directly to the
+// courier, so it never carries an online fee.
+export type DeliveryZoneKey = 'lagos_mainland' | 'lagos_island' | 'other_states' | 'international'
+export const DELIVERY_ZONE_KEYS: DeliveryZoneKey[] = [
+  'lagos_mainland',
+  'lagos_island',
+  'other_states',
+  'international',
+]
+
+export type DeliveryPricing = {
+  delivery_lagos_mainland: number
+  delivery_lagos_island: number
+  delivery_other_states: number
+  free_delivery_threshold: number
 }
 
-export async function getDeliveryZones(): Promise<DeliveryZonePublic[]> {
-  const zones = await prisma.deliveryZone.findMany({ orderBy: { fee: 'asc' } })
-  return zones.map((z) => ({
-    id: z.id,
-    name: z.name,
-    fee: z.fee,
-    estimated_days: z.estimated_days,
-  }))
-}
-
-export async function getFreeDeliveryThreshold(): Promise<number> {
-  const raw = await getSettingValue('free_delivery_threshold')
+async function readMoneySetting(key: DeliverySettingKey): Promise<number> {
+  const raw = await getSettingValue(key)
   const n = Number(raw)
-  return Number.isFinite(n) && n > 0 ? n : FREE_DELIVERY_THRESHOLD_DEFAULT
+  return Number.isFinite(n) && n > 0 ? n : DELIVERY_DEFAULTS[key]
+}
+
+export async function getDeliveryPricing(): Promise<DeliveryPricing> {
+  const [mainland, island, other, threshold] = await Promise.all([
+    readMoneySetting('delivery_lagos_mainland'),
+    readMoneySetting('delivery_lagos_island'),
+    readMoneySetting('delivery_other_states'),
+    readMoneySetting('free_delivery_threshold'),
+  ])
+  return {
+    delivery_lagos_mainland: mainland,
+    delivery_lagos_island: island,
+    delivery_other_states: other,
+    free_delivery_threshold: threshold,
+  }
+}
+
+/** Base fee (kobo) for a zone, before the free-delivery threshold. */
+export function zoneBaseFee(key: DeliveryZoneKey, pricing: DeliveryPricing): number {
+  switch (key) {
+    case 'lagos_mainland':
+      return pricing.delivery_lagos_mainland
+    case 'lagos_island':
+      return pricing.delivery_lagos_island
+    case 'other_states':
+      return pricing.delivery_other_states
+    case 'international':
+      return 0 // paid directly to the courier
+  }
 }
 
 /**
- * Delivery fee in kobo. Free at or above the threshold; otherwise the zone fee.
- * Pure so the price path is unit-tested (testing floor).
+ * Delivery fee (kobo) for a zone. International is always 0 online. Domestic is
+ * free at or above the threshold, otherwise the zone base fee. Pure so the price
+ * path is unit-tested (testing floor).
  */
-export function deliveryFee(subtotal: number, zoneFee: number, threshold: number): number {
-  return subtotal >= threshold ? 0 : zoneFee
+export function deliveryFeeFor(key: DeliveryZoneKey, subtotal: number, pricing: DeliveryPricing): number {
+  if (key === 'international') return 0
+  const base = zoneBaseFee(key, pricing)
+  return subtotal >= pricing.free_delivery_threshold ? 0 : base
 }
 
 /**

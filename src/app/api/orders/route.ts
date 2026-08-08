@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server'
 
-import { deliveryFee, getFreeDeliveryThreshold, orderAmounts } from '@/lib/delivery'
+import {
+  DELIVERY_ZONE_KEYS,
+  deliveryFeeFor,
+  getDeliveryPricing,
+  orderAmounts,
+  type DeliveryZoneKey,
+} from '@/lib/delivery'
 import { notifyFounder } from '@/lib/notify'
 import { generateOrderNumber, normalizePhone } from '@/lib/orders'
 import { prisma } from '@/lib/prisma'
@@ -15,7 +21,7 @@ export async function POST(req: Request) {
     email?: string
     state?: string
     address?: string
-    delivery_zone_id?: string
+    delivery_zone?: string
     plan?: 'full' | 'deposit_50'
     marketing?: boolean
     items?: { variant_id?: string; quantity?: number }[]
@@ -72,17 +78,21 @@ export async function POST(req: Request) {
   const validLines = lines as NonNullable<(typeof lines)[number]>[]
 
   // Delivery is priced server-side from the chosen zone — never from the client
-  // (rule 1). Free at or above the threshold; delivery rides on the balance for
-  // a 50% deposit (orderAmounts).
-  const zone = body.delivery_zone_id
-    ? await prisma.deliveryZone.findUnique({ where: { id: body.delivery_zone_id } })
-    : null
-  if (body.delivery_zone_id && !zone) {
-    return NextResponse.json({ error: 'Select a valid delivery location.' }, { status: 400 })
+  // (rule 1). Free at or above the threshold; international is paid directly to
+  // the courier (0 online); delivery rides on the balance for a 50% deposit.
+  const zoneKey = body.delivery_zone as DeliveryZoneKey
+  if (!zoneKey || !DELIVERY_ZONE_KEYS.includes(zoneKey)) {
+    return NextResponse.json({ error: 'Select a delivery location.' }, { status: 400 })
   }
   const subtotal = validLines.reduce((sum, l) => sum + l.line_total, 0)
-  const threshold = await getFreeDeliveryThreshold()
-  const deliveryFeeAmount = zone ? deliveryFee(subtotal, zone.fee, threshold) : 0
+  const pricing = await getDeliveryPricing()
+  const deliveryFeeAmount = deliveryFeeFor(zoneKey, subtotal, pricing)
+  const deliveryLabel: Record<DeliveryZoneKey, string> = {
+    lagos_mainland: 'Lagos Mainland',
+    lagos_island: 'Lagos Island',
+    other_states: body.state!.trim(),
+    international: 'International (paid on delivery)',
+  }
   const { total, dueNow, balanceDue } = orderAmounts({
     subtotal,
     deliveryFee: deliveryFeeAmount,
@@ -117,7 +127,7 @@ export async function POST(req: Request) {
         customer_phone_snapshot: phoneNormalised,
         customer_email_snapshot: body.email?.trim() || null,
         delivery_address: body.address!.trim(),
-        city: zone?.name ?? body.state!.trim(),
+        city: deliveryLabel[zoneKey],
         state: body.state!.trim(),
         country: 'Nigeria',
         subtotal,
@@ -157,7 +167,7 @@ export async function POST(req: Request) {
         .join('\n') +
       `\nDue now (${plan === 'deposit_50' ? '50% deposit' : 'full'}): ₦${Math.round(dueNow / 100).toLocaleString()}` +
       (balanceDue ? `\nBalance before dispatch: ₦${Math.round(balanceDue / 100).toLocaleString()}` : '') +
-      `\nDelivery${zone ? ` — ${zone.name}` : ''}: ₦${Math.round(deliveryFeeAmount / 100).toLocaleString()}` +
+      `\nDelivery — ${deliveryLabel[zoneKey]}: ${zoneKey === 'international' ? 'paid on delivery' : `₦${Math.round(deliveryFeeAmount / 100).toLocaleString()}`}` +
       `\nDeliver to: ${body.address}, ${body.state}` +
       `\nAwaiting bank transfer — watch Admin → Orders for the payment claim.`
   )
