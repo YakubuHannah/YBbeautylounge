@@ -82,10 +82,10 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
         </p>
 
         {specs.length > 0 && (
-          <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+          <dl className="mt-5 space-y-2">
             {specs.map(([k, val]) => (
-              <div key={k} className="flex items-baseline gap-2">
-                <dt className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+              <div key={k} className="flex items-baseline gap-3">
+                <dt className="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-widest text-violet-800">
                   {k}
                 </dt>
                 <dd className="text-sm text-ink">{val}</dd>
