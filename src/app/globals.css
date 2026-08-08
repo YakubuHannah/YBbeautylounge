@@ -16,10 +16,11 @@
     --violet-200: #C9BDD4;
     --violet-50: #F0EBF4;
 
-    --cherry-600: #9A0002;
-    --cherry-700: #6B0102;
-    --cherry-200: #E9C7C7;
-    --cherry-50: #F8EDED;
+    /* Dark wine — toned down from bright red to blend with the violet palette. */
+    --cherry-600: #7A1F35;
+    --cherry-700: #581425;
+    --cherry-200: #E3C7CD;
+    --cherry-50: #F6EDEF;
 
     --ink: #2A1416;
     --ink-muted: #6B5A50;

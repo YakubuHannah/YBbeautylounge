@@ -23,10 +23,11 @@ module.exports = {
           50: '#F0EBF4',
         },
         cherry: {
-          600: '#9A0002',
-          700: '#6B0102',
-          200: '#E9C7C7',
-          50: '#F8EDED',
+          // Dark wine — toned down from bright red to blend with the violet palette.
+          600: '#7A1F35',
+          700: '#581425',
+          200: '#E3C7CD',
+          50: '#F6EDEF',
         },
         ink: '#2A1416',
         'ink-muted': '#6B5A50',
