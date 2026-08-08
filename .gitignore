@@ -29,3 +29,6 @@ coverage/
 # Turborepo
 .turbo/
 *.tsbuildinfo
+
+# Local AI try-on test assets — never commit customer/face photos
+tryon-test/
