@@ -37,19 +37,17 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
   const instalment = Math.round(variant.price / 4)
   const deposit = Math.round(variant.price / 2)
 
-  // Hair details for the selected option, empties dropped so the highlight
-  // stays clean. Origin is product-level; the rest follow the chosen variant.
-  const specs: [string, string][] = (
-    [
-      ['Texture', textureLabel(product.texture)],
-      ['Origin', product.hair_origin ?? ''],
-      ['Density', variant.density_percent ? `${variant.density_percent}%` : ''],
-      ['Draw type', variant.draw_type?.replace(/_/g, ' ') ?? ''],
-      ['Lace / net', [variant.lace_type, variant.lace_size].filter(Boolean).join(' · ')],
-      ['Cap size', variant.cap_size ?? ''],
-      ['Weight', variant.weight_grams ? `${variant.weight_grams}g` : ''],
-    ] as [string, string][]
-  ).filter(([, val]) => val)
+  // Readable highlights for the selected option, empties dropped. Casing follows
+  // what the founder types; only the first letter is lifted for a clean look.
+  const highlights: string[] = [
+    product.hair_origin ?? '',
+    variant.draw_type?.replace(/_/g, ' ') ?? '',
+    [variant.lace_size, variant.lace_type].filter(Boolean).join(' '),
+    variant.density_percent ? `${variant.density_percent}% density` : '',
+    variant.cap_size ? `${variant.cap_size} cap` : '',
+    variant.weight_grams ? `${variant.weight_grams}g` : '',
+    'Ships in 3–5 working days',
+  ].filter(Boolean)
 
   function handleAdd() {
     addItem(
@@ -81,43 +79,55 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
           before dispatch
         </p>
 
-        {specs.length > 0 && (
-          <dl className="mt-5 space-y-2">
-            {specs.map(([k, val]) => (
-              <div key={k} className="flex items-baseline gap-3">
-                <dt className="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-widest text-violet-800">
-                  {k}
-                </dt>
-                <dd className="text-sm text-ink">{val}</dd>
-              </div>
+        {highlights.length > 0 && (
+          <ul className="mt-5 space-y-2">
+            {highlights.map((item) => (
+              <li key={item} className="flex items-center gap-2 text-sm text-ink">
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  className="h-4 w-4 shrink-0 text-violet-800"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.7 5.3a1 1 0 010 1.42l-7.5 7.5a1 1 0 01-1.42 0L3.3 9.7a1 1 0 111.42-1.42l2.79 2.8 6.79-6.8a1 1 0 011.42 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="first-letter:uppercase">{item}</span>
+              </li>
             ))}
-          </dl>
+          </ul>
         )}
       </div>
 
       <div className="space-y-3">
-        <p className="block text-[11px] font-semibold uppercase tracking-widest text-violet-800">
-          Length & colorway
-        </p>
-        <div className="flex flex-wrap gap-2">
+        <label
+          htmlFor="purchase-length"
+          className="block text-[11px] font-semibold uppercase tracking-widest text-violet-800"
+        >
+          Length
+        </label>
+        <select
+          id="purchase-length"
+          value={variant.id}
+          onChange={(e) => setVariantId(e.target.value)}
+          className="h-12 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-50 px-3 text-ink"
+        >
           {product.variants.map((v) => {
-            const active = v.id === variant.id
+            const soldOut = v.stock_quantity <= 0
+            const name = [v.length_inches ? `${v.length_inches} inches` : null, v.colorway]
+              .filter(Boolean)
+              .join(' · ')
             return (
-              <button
-                key={v.id}
-                type="button"
-                onClick={() => setVariantId(v.id)}
-                className={`rounded-[2px] border px-3 py-2 text-sm ${
-                  active
-                    ? 'border-cherry-600 bg-cherry-50 text-ink'
-                    : 'border-vanilla-400 bg-vanilla-50 text-ink'
-                }`}
-              >
-                {v.length_inches}&quot; {v.colorway}
-              </button>
+              <option key={v.id} value={v.id} disabled={soldOut}>
+                {name || 'Option'}
+                {soldOut ? ' — sold out' : ''}
+              </option>
             )
           })}
-        </div>
+        </select>
         <p className="text-sm text-ink-muted">
           {variant.stock_quantity > 2 && 'In stock'}
           {variant.stock_quantity > 0 && variant.stock_quantity <= 2 && (
@@ -163,10 +173,6 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
           Ask on WhatsApp
         </a>
       </div>
-
-      <p className="text-sm text-ink-muted">
-        Dispatched within 3–5 working days.
-      </p>
     </div>
   )
 }
