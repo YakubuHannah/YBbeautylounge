@@ -31,7 +31,7 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 
 const MARQUEE = [
   '100% Human hair',
-  'Dispatch in 1–2 working days',
+  'Dispatch in 3–5 working days',
   'Worldwide delivery',
   'Custom fit, ready to wear',
   'Reviews from verified customers',
