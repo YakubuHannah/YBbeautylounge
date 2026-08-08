@@ -46,7 +46,8 @@ async function main() {
     data: [
       { name: 'Lagos Mainland', states: ['Lagos'], fee: 350000, estimated_days: '1-2' },
       { name: 'Lagos Island', states: ['Lagos'], fee: 450000, estimated_days: '1-2' },
-      { name: 'Outside Lagos', states: [], fee: 500000, estimated_days: '3-5' }
+      { name: 'Other states', states: [], fee: 500000, estimated_days: '3-5' },
+      { name: 'International', states: [], fee: 0, estimated_days: '7-14' } // price set in admin
     ],
     skipDuplicates: true
   })
