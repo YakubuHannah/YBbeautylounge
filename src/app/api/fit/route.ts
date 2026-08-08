@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
 
 import { firstPhoto, getActiveProducts, textureLabel } from '@/lib/products'
@@ -31,7 +31,7 @@ const RESULT_SCHEMA = {
 } as const
 
 export async function POST(req: Request) {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json(
       { error: 'The stylist is not available yet — check back soon.' },
       { status: 503 }
@@ -74,24 +74,27 @@ export async function POST(req: Request) {
   // The photo is analysed in memory and never written to storage.
   const photoBase64 = Buffer.from(await photo.arrayBuffer()).toString('base64')
 
-  const anthropic = new Anthropic()
-  const response = await anthropic.messages.create({
-    model: 'claude-opus-4-8',
+  const openai = new OpenAI()
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o',
     max_tokens: 2048,
-    system:
-      'You are the in-house stylist for YBBeautylounge, a premium Nigerian wig brand. ' +
-      'A customer shares a photo of their face. Assess the face shape and the features ' +
-      'that matter for choosing a wig (face length-to-width, jawline, forehead, cheekbones), ' +
-      'then recommend the 2–3 pieces from the catalogue that would frame their face best. ' +
-      'Only recommend slugs that appear in the catalogue. Write warmly and specifically — ' +
-      'this is styling advice, not a verdict. Never comment negatively on appearance.',
     messages: [
+      {
+        role: 'system',
+        content:
+          'You are the in-house stylist for YBBeautylounge, a premium Nigerian wig brand. ' +
+          'A customer shares a photo of their face. Assess the face shape and the features ' +
+          'that matter for choosing a wig (face length-to-width, jawline, forehead, cheekbones), ' +
+          'then recommend the 2–3 pieces from the catalogue that would frame their face best. ' +
+          'Only recommend slugs that appear in the catalogue. Write warmly and specifically — ' +
+          'this is styling advice, not a verdict. Never comment negatively on appearance.',
+      },
       {
         role: 'user',
         content: [
           {
-            type: 'image',
-            source: { type: 'base64', media_type: mediaType, data: photoBase64 },
+            type: 'image_url',
+            image_url: { url: `data:${mediaType};base64,${photoBase64}` },
           },
           {
             type: 'text',
@@ -100,22 +103,25 @@ export async function POST(req: Request) {
         ],
       },
     ],
-    output_config: { format: { type: 'json_schema', schema: RESULT_SCHEMA } },
+    response_format: {
+      type: 'json_schema',
+      json_schema: { name: 'fit_result', strict: true, schema: RESULT_SCHEMA },
+    },
   })
 
-  if (response.stop_reason === 'refusal') {
+  const message = completion.choices[0]?.message
+  if (message?.refusal) {
     return NextResponse.json(
       { error: 'That photo could not be analysed. Try a clear, front-facing photo.' },
       { status: 422 }
     )
   }
 
-  const textBlock = response.content.find((b) => b.type === 'text')
-  if (!textBlock || textBlock.type !== 'text') {
+  if (!message?.content) {
     return NextResponse.json({ error: 'Analysis failed — please try again.' }, { status: 502 })
   }
 
-  const result = JSON.parse(textBlock.text) as {
+  const result = JSON.parse(message.content) as {
     face_shape: string
     summary: string
     recommendations: { slug: string; reason: string }[]
