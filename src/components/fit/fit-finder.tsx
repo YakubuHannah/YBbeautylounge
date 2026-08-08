@@ -92,19 +92,59 @@ export function FitFinder() {
     <div className="mt-10 max-w-2xl">
       {!result && (
         <div className="space-y-4">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={onPick}
-            className="block w-full text-sm"
-            aria-label="Photo of your face"
-          />
-          {preview && (
-            <div className="h-48 w-48 overflow-hidden rounded-[2px] border border-vanilla-400 bg-vanilla-50">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={preview} alt="Preview of your upload" className="h-full w-full object-cover" />
-            </div>
-          )}
+          <label className="block cursor-pointer rounded-[2px] border border-dashed border-vanilla-400 bg-vanilla-50 text-center transition-colors hover:border-violet-800 hover:bg-vanilla-100">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={onPick}
+              className="sr-only"
+              aria-label="Photo of your face"
+            />
+            {preview ? (
+              <span className="flex flex-col items-center gap-3 p-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={preview}
+                  alt="Preview of your upload"
+                  className="h-48 w-48 rounded-[2px] object-cover"
+                />
+                <span className="text-sm font-semibold text-violet-800">Change photo</span>
+              </span>
+            ) : (
+              <span className="flex flex-col items-center gap-2 px-6 py-12">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden="true"
+                  className="h-8 w-8 text-violet-800"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6.5 7l1-2h9l1 2H20a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V8a1 1 0 011-1h2.5z"
+                  />
+                  <circle cx="12" cy="13" r="3.5" />
+                </svg>
+                <span className="text-sm font-semibold text-ink">Add your photo</span>
+                <span className="text-xs text-ink-muted">Tap to choose a photo or take one now</span>
+                <span className="text-xs text-ink-muted">JPG, PNG or WebP</span>
+              </span>
+            )}
+          </label>
+
+          <div className="rounded-[2px] bg-vanilla-50 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+              For the best match
+            </p>
+            <ul className="mt-2 space-y-1 text-sm text-ink-muted">
+              <li>Face the camera straight on.</li>
+              <li>Use soft, even light.</li>
+              <li>Hold your hair back from your face.</li>
+              <li>Keep one face in the photo.</li>
+            </ul>
+          </div>
           <p className="text-xs text-ink-muted">
             Your photo is sent to our AI stylist (powered by OpenAI) to read your face shape. It is
             used only for this suggestion and is never saved by YBBeautylounge.
