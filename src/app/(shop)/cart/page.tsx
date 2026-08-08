@@ -18,6 +18,7 @@ type Recommendation = {
 export default function CartPage() {
   const { lines, subtotal, setQuantity, removeItem } = useCart()
   const [recs, setRecs] = useState<Recommendation[]>([])
+  const [imgBySlug, setImgBySlug] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!lines.length) return
@@ -27,6 +28,17 @@ export default function CartPage() {
       .then((data) => setRecs(data.recommendations || []))
       .catch(() => {})
   }, [lines])
+
+  // Backfill photos for older cart lines saved before images were stored.
+  useEffect(() => {
+    const missing = Array.from(new Set(lines.filter((l) => !l.image).map((l) => l.productSlug)))
+    if (!missing.length) return
+    fetch(`/api/cart/images?slugs=${encodeURIComponent(missing.join(','))}`)
+      .then((res) => res.json())
+      .then((data) => setImgBySlug((prev) => ({ ...prev, ...data })))
+      .catch(() => {})
+  }, [lines])
+
   const freeDeliveryAt = 20000000
   const remaining = Math.max(0, freeDeliveryAt - subtotal)
 
@@ -65,10 +77,10 @@ export default function CartPage() {
               href={`/shop/${line.productSlug}`}
               className="h-24 w-20 shrink-0 overflow-hidden bg-vanilla-50"
             >
-              {line.image && (
+              {(line.image ?? imgBySlug[line.productSlug]) && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={line.image}
+                  src={line.image ?? imgBySlug[line.productSlug]}
                   alt={line.productName}
                   className="h-full w-full object-cover"
                 />
