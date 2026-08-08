@@ -51,7 +51,7 @@ export default async function ProductPage({
             ['Origin', product.hair_origin ?? '—'],
             ['Density', v?.density_percent ? `${v.density_percent}%` : '—'],
             ['Draw type', v?.draw_type?.replace(/_/g, ' ') ?? '—'],
-            ['Lace', [v?.lace_type, v?.lace_size].filter(Boolean).join(' · ') || '—'],
+            ['Lace / net', [v?.lace_type, v?.lace_size].filter(Boolean).join(' · ') || '—'],
             ['Cap size', v?.cap_size ?? '—'],
             ['Weight', v?.weight_grams ? `${v.weight_grams}g` : '—'],
           ].map(([k, val]) => (

@@ -50,6 +50,9 @@ export async function PATCH(
       colorway?: string | null
       density_percent?: number | null
       draw_type?: string | null
+      lace_type?: string | null
+      lace_size?: string | null
+      cap_size?: string | null
       price_naira: number
       cost_price_naira?: number | null
       stock_quantity: number
@@ -105,6 +108,9 @@ export async function PATCH(
           colorway: v.colorway ?? null,
           density_percent: v.density_percent ?? null,
           draw_type: v.draw_type ?? null,
+          lace_type: v.lace_type ?? null,
+          lace_size: v.lace_size ?? null,
+          cap_size: v.cap_size ?? null,
           price: Math.round(Number(v.price_naira) * 100),
           cost_price:
             v.cost_price_naira != null && v.cost_price_naira !== undefined

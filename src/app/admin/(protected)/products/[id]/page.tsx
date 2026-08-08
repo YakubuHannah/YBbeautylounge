@@ -13,6 +13,9 @@ type Variant = {
   colorway: string
   density_percent: string
   draw_type: string
+  lace_type: string
+  lace_size: string
+  cap_size: string
   price_naira: string
   cost_price_naira: string
   stock_quantity: string
@@ -110,6 +113,9 @@ export default function AdminProductEditPage() {
             colorway: string | null
             density_percent: number | null
             draw_type: string | null
+            lace_type: string | null
+            lace_size: string | null
+            cap_size: string | null
             price: number
             cost_price: number | null
             stock_quantity: number
@@ -122,6 +128,9 @@ export default function AdminProductEditPage() {
             colorway: v.colorway ?? '',
             density_percent: v.density_percent?.toString() ?? '',
             draw_type: v.draw_type ?? '',
+            lace_type: v.lace_type ?? '',
+            lace_size: v.lace_size ?? '',
+            cap_size: v.cap_size ?? '',
             price_naira: Math.round(v.price / 100).toString(),
             cost_price_naira:
               v.cost_price != null ? Math.round(v.cost_price / 100).toString() : '',
@@ -188,6 +197,9 @@ export default function AdminProductEditPage() {
           colorway: v.colorway || null,
           density_percent: v.density_percent === '' ? null : Number(v.density_percent),
           draw_type: v.draw_type || null,
+          lace_type: v.lace_type || null,
+          lace_size: v.lace_size || null,
+          cap_size: v.cap_size || null,
           price_naira: Number(v.price_naira || 0),
           cost_price_naira: v.cost_price_naira === '' ? null : Number(v.cost_price_naira),
           stock_quantity: Number(v.stock_quantity || 0),
@@ -322,6 +334,9 @@ export default function AdminProductEditPage() {
                   colorway: '',
                   density_percent: '',
                   draw_type: '',
+                  lace_type: '',
+                  lace_size: '',
+                  cap_size: '',
                   price_naira: '',
                   cost_price_naira: '',
                   stock_quantity: '',
@@ -397,6 +412,27 @@ export default function AdminProductEditPage() {
                   className={inputClass}
                   value={v.weight_grams}
                   onChange={(e) => updateVariant(i, { weight_grams: e.target.value })}
+                />
+              </Field>
+              <Field label="Lace / net type" help="e.g. HD lace, transparent, closure, frontal">
+                <input
+                  className={inputClass}
+                  value={v.lace_type}
+                  onChange={(e) => updateVariant(i, { lace_type: e.target.value })}
+                />
+              </Field>
+              <Field label="Lace / net size" help="e.g. 13x4, 5x5, 4x4">
+                <input
+                  className={inputClass}
+                  value={v.lace_size}
+                  onChange={(e) => updateVariant(i, { lace_size: e.target.value })}
+                />
+              </Field>
+              <Field label="Cap size" help="e.g. small, medium, large">
+                <input
+                  className={inputClass}
+                  value={v.cap_size}
+                  onChange={(e) => updateVariant(i, { cap_size: e.target.value })}
                 />
               </Field>
             </div>
