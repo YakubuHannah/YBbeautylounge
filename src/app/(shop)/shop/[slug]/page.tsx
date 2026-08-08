@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
-import { FitFloat } from '@/components/layout/fit-float'
 import { ProductGallery } from '@/components/product/product-gallery'
 import { ProductPurchase } from '@/components/product/product-purchase'
 import { ReviewForm } from '@/components/product/review-form'
@@ -89,8 +88,6 @@ export default async function ProductPage({
         )}
         <ReviewForm productId={product.id} />
       </section>
-
-      <FitFloat />
     </main>
   )
 }

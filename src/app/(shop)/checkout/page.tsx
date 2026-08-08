@@ -375,6 +375,18 @@ export default function CheckoutPage() {
             </p>
           )}
 
+          {!isInternational && (
+            <p className="text-sm text-ink-muted">
+              Delivery:{' '}
+              <span className="font-semibold text-ink">
+                {deliveryDue === 0 ? 'Free' : formatNaira(deliveryDue)}
+              </span>
+              {threshold > 0 && subtotal < threshold && deliveryDue > 0
+                ? ` · free on orders from ${formatNaira(threshold)}`
+                : ''}
+            </p>
+          )}
+
           <textarea
             required
             placeholder="Delivery address"
