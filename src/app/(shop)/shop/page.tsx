@@ -1,33 +1,9 @@
-import Link from 'next/link'
-
 import { ProductCard } from '@/components/product/product-card'
+import { CategoryFilter } from '@/components/shop/category-filter'
 import { getActiveCategories, getActiveProducts } from '@/lib/products'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Shop' }
-
-function FilterItem({
-  href,
-  active,
-  children,
-}: {
-  href: string
-  active: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <Link
-      href={href}
-      className={`block px-4 py-2.5 text-sm no-underline hover:no-underline ${
-        active
-          ? 'bg-cherry-50 font-semibold text-ink'
-          : 'text-ink-muted hover:bg-vanilla-100 hover:text-ink'
-      }`}
-    >
-      {children}
-    </Link>
-  )
-}
 
 export default async function ShopPage({
   searchParams,
@@ -59,43 +35,7 @@ export default async function ShopPage({
       </div>
 
       {categories.length > 0 && (
-        <details className="group relative z-10 mt-8 w-full max-w-xs">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-[2px] border border-vanilla-400 bg-vanilla-50 px-4 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
-            <span className="flex items-center gap-2">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                aria-hidden="true"
-                className="h-4 w-4 text-violet-800"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h18M6 12h12M10 19h4" />
-              </svg>
-              {activeName === 'All products' ? 'All categories' : activeName}
-            </span>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              aria-hidden="true"
-              className="h-4 w-4 transition-transform group-open:rotate-180"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
-            </svg>
-          </summary>
-          <div className="absolute left-0 z-20 mt-2 max-h-80 w-full overflow-y-auto rounded-[2px] border border-vanilla-400 bg-vanilla-50 py-1">
-            <FilterItem href="/shop" active={!categorySlug}>
-              All
-            </FilterItem>
-            {categories.map((c) => (
-              <FilterItem key={c.slug} href={`/shop?category=${c.slug}`} active={categorySlug === c.slug}>
-                {c.name}
-              </FilterItem>
-            ))}
-          </div>
-        </details>
+        <CategoryFilter categories={categories} activeSlug={categorySlug} activeName={activeName} />
       )}
 
       {products.length === 0 ? (
