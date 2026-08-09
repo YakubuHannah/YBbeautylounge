@@ -99,11 +99,17 @@ export default function MyInstallmentsPage() {
           Find
         </Button>
       </form>
+      <p className="mt-2 text-xs text-ink-muted">
+        Use the same phone number you entered at checkout when you placed the order.
+      </p>
 
       {error && <p className="mt-4 text-sm text-cherry-700">{error}</p>}
 
       {data && data.installments.length === 0 && (
-        <p className="mt-10 text-ink-muted">No open installments for this number. Everything is settled.</p>
+        <p className="mt-10 text-ink-muted">
+          No open installments for this number. If you checked out with a different phone, try that
+          number.
+        </p>
       )}
 
       {data && data.installments.length > 0 && (
