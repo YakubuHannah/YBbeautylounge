@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { ReviewCta } from '@/components/reviews/review-cta'
 import { formatNaira } from '@/lib/money'
 
 type Item = { name: string; detail: string | null; quantity: number; slug: string | null }
@@ -204,6 +205,8 @@ export default function MyInstallmentsPage() {
           })}
         </div>
       )}
+
+      {data && <ReviewCta />}
     </main>
   )
 }

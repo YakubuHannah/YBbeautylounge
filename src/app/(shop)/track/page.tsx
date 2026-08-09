@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { ReviewCta } from '@/components/reviews/review-cta'
 import { formatNaira } from '@/lib/money'
 
 type Item = { name: string; detail: string | null; quantity: number }
@@ -171,6 +172,7 @@ export default function TrackPage() {
               })}
             </ol>
           )}
+          <ReviewCta />
         </div>
       )}
     </main>
