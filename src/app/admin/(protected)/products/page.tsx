@@ -20,6 +20,7 @@ function ProductsList() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deletingId, setDeletingId] = useState('')
   const showSaved = searchParams.get('saved') === '1'
 
   useEffect(() => {
@@ -31,6 +32,26 @@ function ProductsList() {
       })
       .finally(() => setLoading(false))
   }, [])
+
+  async function remove(id: string, name: string) {
+    if (
+      !confirm(
+        `Delete "${name}"? It will be removed from the shop. Blocked if a customer is still paying for it on installment.`
+      )
+    ) {
+      return
+    }
+    setDeletingId(id)
+    setError('')
+    const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
+    const data = await res.json()
+    setDeletingId('')
+    if (!res.ok) {
+      setError(data.error || 'Could not delete this product.')
+      return
+    }
+    setProducts((ps) => ps.filter((p) => p.id !== id))
+  }
 
   return (
     <div>
@@ -83,13 +104,38 @@ function ProductsList() {
                     <td className="p-3 capitalize">{p.status}</td>
                     <td className="p-3 tabular-nums">{formatNaira(min)}</td>
                     <td className="p-3">{stock}</td>
-                    <td className="p-3 text-right">
-                      <Link
-                        href={`/admin/products/${p.id}`}
-                        className="font-semibold text-cherry-600"
-                      >
-                        Edit
-                      </Link>
+                    <td className="p-3">
+                      <div className="flex items-center justify-end gap-4">
+                        <Link
+                          href={`/admin/products/${p.id}`}
+                          className="font-semibold text-cherry-600"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => remove(p.id, p.name)}
+                          disabled={deletingId === p.id}
+                          aria-label={`Delete ${p.name}`}
+                          title="Delete product"
+                          className="text-ink-muted hover:text-cherry-600 disabled:opacity-50"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            aria-hidden="true"
+                            className="h-4 w-4"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M4 7h16M9 7V5h6v2m-8 0v12a1 1 0 001 1h8a1 1 0 001-1V7M10 11v6M14 11v6"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )
