@@ -85,11 +85,12 @@ export async function POST(req: Request) {
         role: 'system',
         content:
           'You are the in-house stylist for YBBeautylounge, a premium Nigerian wig brand. ' +
-          'A customer shares a photo of their face. Assess the face shape and the features ' +
-          'that matter for choosing a wig (face length-to-width, jawline, forehead, cheekbones), ' +
-          'then RANK EVERY piece in the catalogue from the best match for this face to the least. ' +
-          'Include ALL pieces — do not leave any out — with the strongest match first, and give ' +
-          'each a short, warm reason for its position. Only use slugs that appear in the catalogue. ' +
+          'A customer shares a photo of their face. Assess the face shape, the complexion and ' +
+          'skin tone, and the features that matter for choosing a wig (face length-to-width, ' +
+          'jawline, forehead, cheekbones, and which lengths, textures and colours flatter this ' +
+          'skin tone), then RANK EVERY piece in the catalogue from the best genuine match for ' +
+          'THIS person to the least. Include ALL pieces — do not leave any out — strongest match ' +
+          'first, each with a short warm reason. Only use slugs that appear in the catalogue. ' +
           'Write warmly and specifically — this is styling advice, not a verdict. Never comment ' +
           'negatively on appearance.',
       },
@@ -131,7 +132,7 @@ export async function POST(req: Request) {
     recommendations: { slug: string; reason: string }[]
   }
 
-  const recommendations = result.recommendations
+  const ranked = result.recommendations
     .map((rec) => {
       const product = pool.find((p) => p.slug === rec.slug)
       if (!product) return null
@@ -151,7 +152,22 @@ export async function POST(req: Request) {
         reason: rec.reason,
       }
     })
-    .filter(Boolean)
+    .filter((r): r is NonNullable<typeof r> => r !== null)
+
+  // Show 3: the genuine top match, plus 2 rotated from the next strong matches
+  // (Math.random per request) so different customers see different pieces and
+  // no unit is left idle. The #1 stays the true best fit.
+  const shuffle = <T>(a: T[]): T[] => {
+    const arr = [...a]
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    }
+    return arr
+  }
+  const [top, ...restRanked] = ranked
+  const rotated = shuffle(restRanked.slice(0, 6)).slice(0, 2)
+  const recommendations = (top ? [top, ...rotated] : []).slice(0, 3)
 
   return NextResponse.json({
     face_shape: result.face_shape,
