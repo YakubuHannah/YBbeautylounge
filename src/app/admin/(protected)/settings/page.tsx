@@ -72,8 +72,8 @@ const SECTIONS: {
     fields: [
       {
         key: 'installment_count',
-        label: 'Number of installments',
-        help: 'How many payments the installment plan splits into. A whole number from 2 to 6.',
+        label: 'Maximum installments',
+        help: 'The most installments a customer may choose (they pick from 2 up to this). A whole number from 2 to 6.',
         placeholder: '4',
       },
     ],

@@ -24,6 +24,7 @@ export async function POST(req: Request) {
     address?: string
     delivery_zone?: string
     plan?: 'full' | 'installment'
+    installment_count?: number
     marketing?: boolean
     items?: { variant_id?: string; quantity?: number }[]
   }
@@ -94,9 +95,14 @@ export async function POST(req: Request) {
     other_states: body.state!.trim(),
     international: 'International (paid on delivery)',
   }
-  // Installment: split the goods into N (founder-set) payments; the first is due
-  // now, delivery stays in the balance.
-  const installmentCount = plan === 'installment' ? await getInstallmentCount() : 1
+  // Installment: the customer picks how many payments (2 up to the founder-set
+  // maximum). The goods split into that many; the first is due now, delivery
+  // stays in the balance.
+  const maxInstallments = await getInstallmentCount()
+  const installmentCount =
+    plan === 'installment'
+      ? Math.min(Math.max(2, Math.round(Number(body.installment_count) || maxInstallments)), maxInstallments)
+      : 1
   const firstPayment =
     plan === 'installment' ? installmentAmounts(subtotal, installmentCount)[0] : undefined
   const { total, dueNow, balanceDue } = orderAmounts({

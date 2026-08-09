@@ -42,14 +42,19 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     )
   }
 
-  // First payment on a plan with a balance (installment / legacy deposit) is the
-  // amount that was due at checkout; otherwise it's the remaining balance.
-  const firstPayment =
+  // What the customer pays with this claim.
+  // - full plan (no stored balance): the whole remaining amount.
+  // - installment: one goods-sized installment each time; the final payment
+  //   clears the remaining goods plus the delivery fee.
+  const remaining = order.total - order.amount_paid
+  const goodsInstallment =
     order.balance_due_amount != null ? order.total - order.balance_due_amount : order.total
   const dueNow =
-    order.amount_paid === 0 && order.balance_due_amount != null
-      ? firstPayment
-      : order.total - order.amount_paid
+    order.balance_due_amount == null
+      ? remaining
+      : remaining <= goodsInstallment + order.delivery_fee
+        ? remaining
+        : goodsInstallment
 
   await prisma.$transaction([
     prisma.payment.create({

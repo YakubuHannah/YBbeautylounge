@@ -56,6 +56,11 @@ export function SiteFooter({ whatsappNumber }: { whatsappNumber: string }) {
               </Link>
             </li>
             <li>
+              <Link href="/my-installments" className="text-vanilla-50 no-underline hover:underline">
+                My installments
+              </Link>
+            </li>
+            <li>
               <Link href="/policies/returns" className="text-vanilla-50 no-underline hover:underline">
                 Returns
               </Link>

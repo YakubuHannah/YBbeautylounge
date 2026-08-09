@@ -53,6 +53,7 @@ export default function CheckoutPage() {
     installment_count: 4,
   })
   const [plan, setPlan] = useState<'full' | 'installment'>('full')
+  const [installmentN, setInstallmentN] = useState(4)
   const [marketing, setMarketing] = useState(false)
   const [screenshot, setScreenshot] = useState<File | null>(null)
   const [sending, setSending] = useState(false)
@@ -62,7 +63,10 @@ export default function CheckoutPage() {
     fetch('/api/delivery')
       .then((r) => r.json())
       .then((d) => {
-        if (d && typeof d.delivery_other_states === 'number') setPricing(d)
+        if (d && typeof d.delivery_other_states === 'number') {
+          setPricing(d)
+          if (d.installment_count) setInstallmentN(Number(d.installment_count))
+        }
       })
       .catch(() => {})
   }, [])
@@ -82,6 +86,7 @@ export default function CheckoutPage() {
         address,
         delivery_zone: zoneKey,
         plan,
+        installment_count: chosenInstallments,
         marketing,
         items: lines.map((l) => ({ variant_id: l.variantId, quantity: l.quantity })),
       }),
@@ -324,7 +329,9 @@ export default function CheckoutPage() {
   const threshold = pricing.free_delivery_threshold
   const deliveryDue = isInternational ? 0 : threshold > 0 && subtotal >= threshold ? 0 : baseFee
   const orderTotal = subtotal + deliveryDue
-  const installments = installmentAmounts(subtotal, pricing.installment_count || 4)
+  const maxInstallments = Math.max(2, pricing.installment_count || 4)
+  const chosenInstallments = Math.min(Math.max(2, installmentN), maxInstallments)
+  const installments = installmentAmounts(subtotal, chosenInstallments)
   const firstInstallment = installments[0] ?? subtotal
   // Full pays everything now; installment pays the first (goods-only) part now.
   const dueToday = plan === 'installment' ? firstInstallment : orderTotal
@@ -454,15 +461,31 @@ export default function CheckoutPage() {
               checked={plan === 'installment'}
               onChange={() => setPlan('installment')}
             />
-            Installment · {installments.length} payments of {formatNaira(firstInstallment)}
+            Installment · pay in parts
           </label>
 
           {plan === 'installment' && (
             <div className="rounded-[2px] border border-vanilla-400 bg-vanilla-50 p-4 text-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
-                Your installments
-              </p>
-              <ul className="mt-2 space-y-1">
+              <label className="block space-y-1">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+                  Choose your plan
+                </span>
+                <select
+                  value={chosenInstallments}
+                  onChange={(e) => setInstallmentN(Number(e.target.value))}
+                  aria-label="Number of installments"
+                  className="mt-1 h-11 w-full rounded-[2px] border border-vanilla-400 bg-vanilla-50 px-3"
+                >
+                  {Array.from({ length: Math.max(0, maxInstallments - 1) }, (_, i) => i + 2).map(
+                    (n) => (
+                      <option key={n} value={n}>
+                        {n} installments
+                      </option>
+                    )
+                  )}
+                </select>
+              </label>
+              <ul className="mt-3 space-y-1">
                 {installments.map((amt, i) => (
                   <li key={i} className="flex justify-between">
                     <span>
