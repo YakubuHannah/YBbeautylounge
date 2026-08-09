@@ -19,6 +19,8 @@ type FitResult = {
   recommendations: Recommendation[]
 }
 
+type TryonState = 'idle' | 'loading' | 'done' | 'failed'
+
 const MAX_EDGE = 1024
 
 async function toJpeg(file: File): Promise<Blob> {
@@ -53,6 +55,9 @@ export function FitFinder() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<FitResult | null>(null)
+  const [tryonState, setTryonState] = useState<TryonState>('idle')
+  const [tryonImage, setTryonImage] = useState<string | null>(null)
+  const [tryonName, setTryonName] = useState('')
 
   function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = e.target.files?.[0]
@@ -60,7 +65,29 @@ export function FitFinder() {
     setFile(picked)
     setPreview(URL.createObjectURL(picked))
     setResult(null)
+    setTryonState('idle')
+    setTryonImage(null)
     setError('')
+  }
+
+  async function generateTryon(jpeg: Blob, slug: string, name: string) {
+    setTryonState('loading')
+    setTryonName(name)
+    try {
+      const form = new FormData()
+      form.append('photo', jpeg, 'photo.jpg')
+      form.append('slug', slug)
+      const res = await fetch('/api/fit/tryon', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok || !data.image) {
+        setTryonState('failed')
+        return
+      }
+      setTryonImage(data.image)
+      setTryonState('done')
+    } catch {
+      setTryonState('failed')
+    }
   }
 
   async function analyse() {
@@ -81,6 +108,9 @@ export function FitFinder() {
         return
       }
       setResult(data)
+      // Put the top match on the customer's photo while the cards show.
+      const top = data.recommendations?.[0]
+      if (top) generateTryon(jpeg, top.slug, top.name)
     } catch {
       setError('Something went wrong — please try again.')
     } finally {
@@ -164,6 +194,38 @@ export function FitFinder() {
 
       {result && (
         <div className="space-y-8">
+          {tryonState === 'loading' && (
+            <div className="max-w-sm">
+              <div className="flex aspect-[2/3] w-full items-center justify-center bg-vanilla-100 text-sm text-ink-muted">
+                Creating your preview…
+              </div>
+              <p className="mt-2 text-xs text-ink-muted">
+                Placing {tryonName || 'your top match'} on your photo.
+              </p>
+            </div>
+          )}
+
+          {tryonState === 'done' && tryonImage && (
+            <div className="max-w-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+                {tryonName} on you
+              </p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={tryonImage}
+                alt={`${tryonName} shown on you`}
+                className="mt-2 aspect-[2/3] w-full object-cover"
+              />
+              <p className="mt-2 text-xs text-ink-muted">AI preview — actual unit may vary.</p>
+            </div>
+          )}
+
+          {tryonState === 'failed' && (
+            <p className="text-sm text-ink-muted">
+              We could not create a preview for this photo, but here are your best matches.
+            </p>
+          )}
+
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
               {result.face_shape}
@@ -211,6 +273,8 @@ export function FitFinder() {
               setResult(null)
               setFile(null)
               setPreview(null)
+              setTryonState('idle')
+              setTryonImage(null)
             }}
             className="text-sm font-semibold text-cherry-600"
           >
