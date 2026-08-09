@@ -25,6 +25,8 @@ const states = [
 type PlacedOrder = {
   order_id: string
   order_number: string
+  subtotal: number
+  delivery_fee: number
   total: number
   due_now: number
   bank: { bank_name: string; account_name: string; account_number: string }
@@ -140,9 +142,38 @@ export default function CheckoutPage() {
           <span className="font-semibold tabular-nums text-cherry-600">
             {formatNaira(order.due_now)}
           </span>{' '}
-          {order.due_now < order.total ? '(your 50% deposit) ' : ''}to the account below, then
+          {order.due_now < order.total ? '(your part-payment) ' : ''}to the account below, then
           attach your receipt so we can confirm it.
         </p>
+
+        <div className="mt-6 space-y-2 border border-vanilla-400 bg-vanilla-50 p-6 text-sm">
+          <div className="flex justify-between">
+            <span>Goods</span>
+            <span className="tabular-nums">{formatNaira(order.subtotal)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Delivery</span>
+            <span className="tabular-nums">
+              {order.delivery_fee > 0 ? formatNaira(order.delivery_fee) : 'Free'}
+            </span>
+          </div>
+          <div className="flex justify-between border-t border-vanilla-400 pt-2 font-semibold">
+            <span>Order total</span>
+            <span className="tabular-nums">{formatNaira(order.total)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Paying now</span>
+            <span className="tabular-nums font-semibold text-cherry-600">
+              {formatNaira(order.due_now)}
+            </span>
+          </div>
+          {order.due_now < order.total && (
+            <div className="flex justify-between text-ink-muted">
+              <span>Balance before dispatch</span>
+              <span className="tabular-nums">{formatNaira(order.total - order.due_now)}</span>
+            </div>
+          )}
+        </div>
 
         {bankReady ? (
           <div className="mt-6 space-y-2 border border-vanilla-400 bg-vanilla-50 p-6">
@@ -417,7 +448,7 @@ export default function CheckoutPage() {
               checked={plan === 'deposit_50'}
               onChange={() => setPlan('deposit_50')}
             />
-            50% deposit · {formatNaira(Math.round(subtotal / 2))} today
+            50% deposit · {formatNaira(Math.round(subtotal / 2) + deliveryDue)} today
           </label>
         </fieldset>
 
@@ -451,7 +482,8 @@ export default function CheckoutPage() {
           </div>
           {plan === 'deposit_50' && deliveryDue > 0 && (
             <p className="mt-2 text-xs text-ink-muted">
-              Delivery is added to your balance, due before dispatch.
+              Your payment today includes the full delivery fee. The balance is the rest of the
+              goods, due before dispatch.
             </p>
           )}
           <p className="mt-2 text-xs text-ink-muted">

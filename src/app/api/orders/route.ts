@@ -165,9 +165,11 @@ export async function POST(req: Request) {
       validLines
         .map((l) => `- ${l.variant.product.name} (${l.description}) x${l.quantity}`)
         .join('\n') +
-      `\nDue now (${plan === 'deposit_50' ? '50% deposit' : 'full'}): ₦${Math.round(dueNow / 100).toLocaleString()}` +
+      `\nGoods: ₦${Math.round(subtotal / 100).toLocaleString()}` +
+      `\nDelivery — ${deliveryLabel[zoneKey]}: ${zoneKey === 'international' ? 'paid on delivery to courier' : `₦${Math.round(deliveryFeeAmount / 100).toLocaleString()}`}` +
+      `\nOrder total: ₦${Math.round(total / 100).toLocaleString()}` +
+      `\nDue now (${plan === 'deposit_50' ? '50% deposit + delivery' : 'full'}): ₦${Math.round(dueNow / 100).toLocaleString()}` +
       (balanceDue ? `\nBalance before dispatch: ₦${Math.round(balanceDue / 100).toLocaleString()}` : '') +
-      `\nDelivery — ${deliveryLabel[zoneKey]}: ${zoneKey === 'international' ? 'paid on delivery' : `₦${Math.round(deliveryFeeAmount / 100).toLocaleString()}`}` +
       `\nDeliver to: ${body.address}, ${body.state}` +
       `\nAwaiting bank transfer — watch Admin → Orders for the payment claim.`
   )
@@ -175,6 +177,8 @@ export async function POST(req: Request) {
   return NextResponse.json({
     order_id: order.id,
     order_number: order.order_number,
+    subtotal,
+    delivery_fee: deliveryFeeAmount,
     total,
     due_now: dueNow,
     bank: { bank_name: bankName, account_name: accountName, account_number: accountNumber },

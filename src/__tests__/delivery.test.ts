@@ -43,11 +43,11 @@ describe('orderAmounts', () => {
     expect(a.balanceDue).toBeNull()
   })
 
-  it('50% deposit: delivery goes on the balance, not the deposit', () => {
+  it('50% deposit: half the goods plus the full delivery is due now', () => {
     const a = orderAmounts({ subtotal: 18_500_000, deliveryFee: 450_000, plan: 'deposit_50' })
     expect(a.total).toBe(18_950_000)
-    expect(a.dueNow).toBe(9_250_000)
-    expect(a.balanceDue).toBe(9_700_000)
+    expect(a.dueNow).toBe(9_700_000) // 9,250,000 goods half + 450,000 delivery
+    expect(a.balanceDue).toBe(9_250_000) // remaining goods only
     expect(a.dueNow + a.balanceDue!).toBe(a.total)
   })
 })

@@ -78,9 +78,9 @@ export function deliveryFeeFor(key: DeliveryZoneKey, subtotal: number, pricing: 
 }
 
 /**
- * Split an order into total, amount due now, and balance. Delivery is added to
- * the balance on a 50% deposit — the deposit stays 50% of the goods only.
- * Pure so the money split is unit-tested (testing floor).
+ * Split an order into total, amount due now, and balance. Delivery is collected
+ * up front: a 50% deposit is half the goods PLUS the full delivery fee, and the
+ * balance is the remaining goods only. Pure so the money split is unit-tested.
  */
 export function orderAmounts(opts: {
   subtotal: number
@@ -89,7 +89,7 @@ export function orderAmounts(opts: {
 }): { total: number; dueNow: number; balanceDue: number | null } {
   const total = opts.subtotal + opts.deliveryFee
   if (opts.plan === 'deposit_50') {
-    const dueNow = Math.round(opts.subtotal / 2)
+    const dueNow = Math.round(opts.subtotal / 2) + opts.deliveryFee
     return { total, dueNow, balanceDue: total - dueNow }
   }
   return { total, dueNow: total, balanceDue: null }
