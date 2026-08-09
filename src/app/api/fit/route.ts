@@ -165,12 +165,13 @@ export async function POST(req: Request) {
     }
     return arr
   }
-  // Spread the picks across texture families so we don't show three long
-  // straights: bob / straight-long / wavy-curly.
+  // Spread the picks across distinct texture families so we don't show three of
+  // the same: bob / straight-long / wavy / curly (wavy and curly are separate).
   const family = (r: (typeof ranked)[number]) => {
     const s = `${r.texture} ${r.name} ${r.slug}`.toLowerCase()
     if (s.includes('bob')) return 'bob'
-    if (s.includes('wav') || s.includes('curl')) return 'wavy-curly'
+    if (s.includes('curl')) return 'curly'
+    if (s.includes('wav')) return 'wavy'
     return 'straight-long'
   }
   const [top, ...restRanked] = ranked
