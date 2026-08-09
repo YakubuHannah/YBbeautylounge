@@ -216,7 +216,27 @@ export function FitFinder() {
                 alt={`${tryonName} shown on you`}
                 className="mt-2 aspect-[2/3] w-full object-cover"
               />
-              <p className="mt-2 text-xs text-ink-muted">AI preview — actual unit may vary.</p>
+              <a
+                href={tryonImage}
+                download="ybbeautylounge-try-on.png"
+                className="mt-3 inline-flex h-10 items-center gap-2 border border-ink px-4 text-sm font-semibold text-ink no-underline hover:bg-ink hover:text-vanilla-50 hover:no-underline"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden="true"
+                  className="h-4 w-4"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
+                </svg>
+                Download preview
+              </a>
+              <p className="mt-3 text-xs text-ink-muted">
+                AI preview. The stylist recreates your photo, so your face and the wig may not appear
+                with full accuracy — the real unit can look different.
+              </p>
             </div>
           )}
 

@@ -165,9 +165,34 @@ export async function POST(req: Request) {
     }
     return arr
   }
+  // Spread the picks across texture families so we don't show three long
+  // straights: bob / straight-long / wavy-curly.
+  const family = (r: (typeof ranked)[number]) => {
+    const s = `${r.texture} ${r.name} ${r.slug}`.toLowerCase()
+    if (s.includes('bob')) return 'bob'
+    if (s.includes('wav') || s.includes('curl')) return 'wavy-curly'
+    return 'straight-long'
+  }
   const [top, ...restRanked] = ranked
-  const rotated = shuffle(restRanked.slice(0, 6)).slice(0, 2)
-  const recommendations = (top ? [top, ...rotated] : []).slice(0, 3)
+  const strongPool = shuffle(restRanked.slice(0, 8))
+  const recommendations: typeof ranked = []
+  if (top) {
+    recommendations.push(top)
+    const usedFamilies = new Set([family(top)])
+    // First, add strong matches from families we haven't shown yet.
+    for (const r of strongPool) {
+      if (recommendations.length >= 3) break
+      if (!usedFamilies.has(family(r))) {
+        recommendations.push(r)
+        usedFamilies.add(family(r))
+      }
+    }
+    // Then fill to 3 with the next strong matches if still short.
+    for (const r of strongPool) {
+      if (recommendations.length >= 3) break
+      if (!recommendations.includes(r)) recommendations.push(r)
+    }
+  }
 
   return NextResponse.json({
     face_shape: result.face_shape,
