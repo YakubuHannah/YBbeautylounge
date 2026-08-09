@@ -227,13 +227,10 @@ export default function AdminProductEditPage() {
   }
 
   async function remove() {
-    if (
-      !confirm(
-        'Delete this product? It will be removed from the shop. Blocked if a customer is still paying for it on installment.'
-      )
-    ) {
-      return
-    }
+    const typed = prompt(
+      'Type DELETE to remove this product. It leaves the shop (blocked if a customer is still paying for it on installment).'
+    )
+    if (typed !== 'DELETE') return
     setDeleting(true)
     setError('')
     const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })

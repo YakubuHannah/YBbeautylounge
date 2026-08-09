@@ -34,13 +34,10 @@ function ProductsList() {
   }, [])
 
   async function remove(id: string, name: string) {
-    if (
-      !confirm(
-        `Delete "${name}"? It will be removed from the shop. Blocked if a customer is still paying for it on installment.`
-      )
-    ) {
-      return
-    }
+    const typed = prompt(
+      `Type DELETE to remove "${name}". It leaves the shop (blocked if a customer is still paying for it on installment).`
+    )
+    if (typed !== 'DELETE') return
     setDeletingId(id)
     setError('')
     const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
