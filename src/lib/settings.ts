@@ -10,6 +10,7 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   notification_email: '',
   restoration_before_media_id: '',
   restoration_after_media_id: '',
+  installment_count: '4',
 }
 
 export async function getSettingValue(key: string): Promise<string> {

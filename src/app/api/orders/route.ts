@@ -7,6 +7,7 @@ import {
   orderAmounts,
   type DeliveryZoneKey,
 } from '@/lib/delivery'
+import { getInstallmentCount, installmentAmounts } from '@/lib/installments'
 import { notifyFounder } from '@/lib/notify'
 import { generateOrderNumber, normalizePhone } from '@/lib/orders'
 import { prisma } from '@/lib/prisma'
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
     state?: string
     address?: string
     delivery_zone?: string
-    plan?: 'full' | 'deposit_50'
+    plan?: 'full' | 'installment'
     marketing?: boolean
     items?: { variant_id?: string; quantity?: number }[]
   }
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
   if (!body.address?.trim() || !body.state?.trim()) {
     return NextResponse.json({ error: 'Delivery address and state required' }, { status: 400 })
   }
-  const plan = body.plan === 'deposit_50' ? 'deposit_50' : 'full'
+  const plan = body.plan === 'installment' ? 'installment' : 'full'
   const requested = (body.items || [])
     .map((i) => ({ variant_id: String(i.variant_id || ''), quantity: Number(i.quantity) }))
     .filter((i) => i.variant_id && Number.isInteger(i.quantity) && i.quantity > 0 && i.quantity <= 20)
@@ -93,10 +94,16 @@ export async function POST(req: Request) {
     other_states: body.state!.trim(),
     international: 'International (paid on delivery)',
   }
+  // Installment: split the goods into N (founder-set) payments; the first is due
+  // now, delivery stays in the balance.
+  const installmentCount = plan === 'installment' ? await getInstallmentCount() : 1
+  const firstPayment =
+    plan === 'installment' ? installmentAmounts(subtotal, installmentCount)[0] : undefined
   const { total, dueNow, balanceDue } = orderAmounts({
     subtotal,
     deliveryFee: deliveryFeeAmount,
     plan,
+    firstPayment,
   })
 
   const order = await prisma.$transaction(async (tx) => {
@@ -168,8 +175,10 @@ export async function POST(req: Request) {
       `\nGoods: ₦${Math.round(subtotal / 100).toLocaleString()}` +
       `\nDelivery — ${deliveryLabel[zoneKey]}: ${zoneKey === 'international' ? 'paid on delivery to courier' : `₦${Math.round(deliveryFeeAmount / 100).toLocaleString()}`}` +
       `\nOrder total: ₦${Math.round(total / 100).toLocaleString()}` +
-      `\nDue now (${plan === 'deposit_50' ? '50% deposit + delivery' : 'full'}): ₦${Math.round(dueNow / 100).toLocaleString()}` +
-      (balanceDue ? `\nBalance before dispatch: ₦${Math.round(balanceDue / 100).toLocaleString()}` : '') +
+      `\nDue now (${plan === 'installment' ? `installment 1 of ${installmentCount}, goods only` : 'full'}): ₦${Math.round(dueNow / 100).toLocaleString()}` +
+      (balanceDue
+        ? `\nBalance before dispatch (incl. delivery): ₦${Math.round(balanceDue / 100).toLocaleString()}`
+        : '') +
       `\nDeliver to: ${body.address}, ${body.state}` +
       `\nAwaiting bank transfer — watch Admin → Orders for the payment claim.`
   )

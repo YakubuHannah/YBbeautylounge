@@ -32,6 +32,13 @@ const VALIDATORS: Record<string, (value: string) => string | null> = {
     }
     return null
   },
+  installment_count: (value) => {
+    const n = Number(value)
+    if (!Number.isInteger(n) || n < 2 || n > 6) {
+      return 'Installments must be a whole number from 2 to 6.'
+    }
+    return null
+  },
 }
 
 export async function GET() {

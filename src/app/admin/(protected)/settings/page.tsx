@@ -67,6 +67,17 @@ const SECTIONS: {
       },
     ],
   },
+  {
+    title: 'Installments',
+    fields: [
+      {
+        key: 'installment_count',
+        label: 'Number of installments',
+        help: 'How many payments the installment plan splits into. A whole number from 2 to 6.',
+        placeholder: '4',
+      },
+    ],
+  },
 ]
 
 export default function AdminSettingsPage() {

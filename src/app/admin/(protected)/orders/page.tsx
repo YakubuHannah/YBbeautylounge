@@ -130,7 +130,11 @@ export default function AdminOrdersPage() {
                     </p>
                     <p className="text-xs text-ink-muted">
                       Paid {formatNaira(o.amount_paid)}
-                      {o.payment_plan === 'deposit_50' ? ' · 50% deposit plan' : ''}
+                      {o.payment_plan === 'installment'
+                        ? ' · installment plan'
+                        : o.payment_plan === 'deposit_50'
+                          ? ' · 50% deposit plan'
+                          : ''}
                     </p>
                   </div>
                 </div>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/components/cart/cart-provider'
+import { installmentAmounts, INSTALLMENT_WINDOW_MONTHS } from '@/lib/installment-math'
 import { formatNaira } from '@/lib/money'
 import { whatsAppUrl } from '@/lib/whatsapp'
 import { usePublicSettings } from '@/components/settings/settings-provider'
@@ -49,8 +50,9 @@ export default function CheckoutPage() {
     delivery_lagos_island: 0,
     delivery_other_states: 0,
     free_delivery_threshold: 0,
+    installment_count: 4,
   })
-  const [plan, setPlan] = useState<'full' | 'deposit_50'>('full')
+  const [plan, setPlan] = useState<'full' | 'installment'>('full')
   const [marketing, setMarketing] = useState(false)
   const [screenshot, setScreenshot] = useState<File | null>(null)
   const [sending, setSending] = useState(false)
@@ -322,6 +324,10 @@ export default function CheckoutPage() {
   const threshold = pricing.free_delivery_threshold
   const deliveryDue = isInternational ? 0 : threshold > 0 && subtotal >= threshold ? 0 : baseFee
   const orderTotal = subtotal + deliveryDue
+  const installments = installmentAmounts(subtotal, pricing.installment_count || 4)
+  const firstInstallment = installments[0] ?? subtotal
+  // Full pays everything now; installment pays the first (goods-only) part now.
+  const dueToday = plan === 'installment' ? firstInstallment : orderTotal
 
   return (
     <main className="mx-auto max-w-xl px-5 py-10 md:px-12 md:py-16">
@@ -445,11 +451,41 @@ export default function CheckoutPage() {
             <input
               type="radio"
               name="plan"
-              checked={plan === 'deposit_50'}
-              onChange={() => setPlan('deposit_50')}
+              checked={plan === 'installment'}
+              onChange={() => setPlan('installment')}
             />
-            50% deposit · {formatNaira(Math.round(subtotal / 2) + deliveryDue)} today
+            Installment · {installments.length} payments of {formatNaira(firstInstallment)}
           </label>
+
+          {plan === 'installment' && (
+            <div className="rounded-[2px] border border-vanilla-400 bg-vanilla-50 p-4 text-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-violet-800">
+                Your installments
+              </p>
+              <ul className="mt-2 space-y-1">
+                {installments.map((amt, i) => (
+                  <li key={i} className="flex justify-between">
+                    <span>
+                      Payment {i + 1}
+                      {i === 0 ? ' (today)' : ''}
+                    </span>
+                    <span className="tabular-nums">{formatNaira(amt)}</span>
+                  </li>
+                ))}
+                {!isInternational && deliveryDue > 0 && (
+                  <li className="flex justify-between text-ink-muted">
+                    <span>Delivery (with your balance)</span>
+                    <span className="tabular-nums">{formatNaira(deliveryDue)}</span>
+                  </li>
+                )}
+              </ul>
+              <p className="mt-3 text-xs text-ink-muted">
+                Pay the first installment today. Your wig ships once the full balance is paid, and
+                delivery is paid with the balance. Please complete within {INSTALLMENT_WINDOW_MONTHS}{' '}
+                months — need longer? Message us and we’ll arrange it.
+              </p>
+            </div>
+          )}
         </fieldset>
 
         <label className="flex items-start gap-3 text-sm text-ink-muted">
@@ -480,10 +516,14 @@ export default function CheckoutPage() {
             <span>Total</span>
             <span className="font-semibold tabular-nums">{formatNaira(orderTotal)}</span>
           </div>
-          {plan === 'deposit_50' && deliveryDue > 0 && (
+          <div className="mt-2 flex justify-between text-sm">
+            <span>Due today</span>
+            <span className="font-semibold tabular-nums text-cherry-600">{formatNaira(dueToday)}</span>
+          </div>
+          {plan === 'installment' && (
             <p className="mt-2 text-xs text-ink-muted">
-              Your payment today includes the full delivery fee. The balance is the rest of the
-              goods, due before dispatch.
+              You pay the first installment today. Delivery is paid with your balance, and your wig
+              ships once the balance is fully paid.
             </p>
           )}
           <p className="mt-2 text-xs text-ink-muted">

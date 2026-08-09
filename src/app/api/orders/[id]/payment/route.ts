@@ -42,9 +42,13 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     )
   }
 
+  // First payment on a plan with a balance (installment / legacy deposit) is the
+  // amount that was due at checkout; otherwise it's the remaining balance.
+  const firstPayment =
+    order.balance_due_amount != null ? order.total - order.balance_due_amount : order.total
   const dueNow =
-    order.payment_plan === 'deposit_50' && order.amount_paid === 0
-      ? Math.round(order.total / 2)
+    order.amount_paid === 0 && order.balance_due_amount != null
+      ? firstPayment
       : order.total - order.amount_paid
 
   await prisma.$transaction([
@@ -52,7 +56,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       data: {
         order_id: order.id,
         amount: dueNow,
-        type: order.payment_plan === 'deposit_50' && order.amount_paid === 0 ? 'deposit' : 'full',
+        type: order.amount_paid === 0 && order.balance_due_amount != null ? 'deposit' : 'full',
         method: 'bank_transfer',
         status: 'pending',
         raw_webhook_payload: { screenshot_url: uploaded.url, filename: screenshot.name },
