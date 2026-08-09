@@ -81,6 +81,7 @@ export default function AdminProductEditPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -222,6 +223,27 @@ export default function AdminProductEditPage() {
     }
     setMessage('Saved. Taking you back to all products…')
     router.push('/admin/products?saved=1')
+    router.refresh()
+  }
+
+  async function remove() {
+    if (
+      !confirm(
+        'Delete this product? It will be removed from the shop. Blocked if a customer is still paying for it on installment.'
+      )
+    ) {
+      return
+    }
+    setDeleting(true)
+    setError('')
+    const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
+    const data = await res.json()
+    setDeleting(false)
+    if (!res.ok) {
+      setError(data.error || 'Could not delete this product.')
+      return
+    }
+    router.push('/admin/products?deleted=1')
     router.refresh()
   }
 
@@ -538,6 +560,22 @@ export default function AdminProductEditPage() {
       <Button type="button" variant="primary" className="h-12 w-full" loading={saving} onClick={save}>
         Save changes
       </Button>
+
+      <div className="border-t border-vanilla-400 pt-6">
+        <p className="text-sm font-semibold text-ink">Danger zone</p>
+        <p className="mt-1 text-sm text-ink-muted">
+          Remove this product from the shop. You cannot delete a product while a customer is still
+          paying for it on installment.
+        </p>
+        <button
+          type="button"
+          onClick={remove}
+          disabled={deleting}
+          className="mt-3 inline-flex h-11 items-center border border-cherry-600 px-5 text-sm font-semibold text-cherry-600 hover:bg-cherry-600 hover:text-vanilla-50 disabled:opacity-60"
+        >
+          {deleting ? 'Deleting…' : 'Delete product'}
+        </button>
+      </div>
     </div>
   )
 }

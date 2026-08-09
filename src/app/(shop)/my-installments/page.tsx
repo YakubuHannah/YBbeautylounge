@@ -1,11 +1,12 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { formatNaira } from '@/lib/money'
 
-type Item = { name: string; detail: string | null; quantity: number }
+type Item = { name: string; detail: string | null; quantity: number; slug: string | null }
 type Installment = {
   order_id: string
   order_number: string
@@ -123,13 +124,25 @@ export default function MyInstallmentsPage() {
                   Order {it.order_number}
                 </p>
                 <ul className="mt-2 space-y-1 text-sm text-ink">
-                  {it.items.map((line, i) => (
-                    <li key={i}>
-                      {line.name}
-                      {line.detail ? ` · ${line.detail}` : ''}
-                      {line.quantity > 1 ? ` ×${line.quantity}` : ''}
-                    </li>
-                  ))}
+                  {it.items.map((line, i) => {
+                    const label = `${line.name}${line.detail ? ` · ${line.detail}` : ''}${
+                      line.quantity > 1 ? ` ×${line.quantity}` : ''
+                    }`
+                    return (
+                      <li key={i}>
+                        {line.slug ? (
+                          <Link
+                            href={`/shop/${line.slug}`}
+                            className="text-ink underline decoration-vanilla-400 underline-offset-2 hover:text-cherry-700"
+                          >
+                            {label}
+                          </Link>
+                        ) : (
+                          label
+                        )}
+                      </li>
+                    )
+                  })}
                 </ul>
 
                 <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-vanilla-200">

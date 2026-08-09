@@ -20,7 +20,13 @@ export async function GET(req: Request) {
   const orders = await prisma.order.findMany({
     where: { customer: { phone_normalised: phone }, payment_plan: 'installment' },
     orderBy: { createdAt: 'desc' },
-    include: { items: true },
+    include: {
+      items: {
+        include: {
+          variant: { include: { product: { select: { slug: true, status: true, deleted_at: true } } } },
+        },
+      },
+    },
   })
   const active = orders.filter((o) => o.amount_paid < o.total && o.payment_status !== 'cancelled')
 
@@ -46,11 +52,16 @@ export async function GET(req: Request) {
         balance: remaining,
         next_payment: nextPayment,
         payment_status: o.payment_status,
-        items: o.items.map((it) => ({
-          name: it.product_name_snapshot,
-          detail: it.variant_description_snapshot,
-          quantity: it.quantity,
-        })),
+        items: o.items.map((it) => {
+          const product = it.variant?.product
+          const available = product?.status === 'active' && !product?.deleted_at
+          return {
+            name: it.product_name_snapshot,
+            detail: it.variant_description_snapshot,
+            quantity: it.quantity,
+            slug: available ? product?.slug ?? null : null,
+          }
+        }),
       }
     }),
   })

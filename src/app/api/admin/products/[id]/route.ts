@@ -182,3 +182,51 @@ export async function PATCH(
 
   return NextResponse.json({ product })
 }
+
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+  let admin
+  try {
+    admin = await requireAdminSession()
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const product = await prisma.product.findUnique({ where: { id: params.id } })
+  if (!product) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  // Cannot delete a product a customer is still paying for on installment.
+  const activeInstallment = await prisma.order.findFirst({
+    where: {
+      payment_plan: 'installment',
+      payment_status: { notIn: ['paid', 'cancelled'] },
+      items: { some: { variant: { product_id: params.id } } },
+    },
+    select: { order_number: true },
+  })
+  if (activeInstallment) {
+    return NextResponse.json(
+      {
+        error: `Cannot delete — an installment is still being paid on this product (order ${activeInstallment.order_number}). Finish or cancel it first.`,
+      },
+      { status: 409 }
+    )
+  }
+
+  // Soft delete: keeps the record for historical orders, removes it from the shop.
+  await prisma.product.update({
+    where: { id: params.id },
+    data: { deleted_at: new Date(), status: 'archived' },
+  })
+  await prisma.auditLog.create({
+    data: {
+      actor_id: admin.adminId,
+      actor_type: 'admin',
+      action: 'product.delete',
+      entity_type: 'product',
+      entity_id: params.id,
+      before_value: { name: product.name, status: product.status },
+    },
+  })
+
+  return NextResponse.json({ ok: true })
+}
