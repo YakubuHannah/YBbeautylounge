@@ -8,12 +8,15 @@ import { formatNaira } from '@/lib/money'
 
 type Item = { name: string; detail: string | null; quantity: number }
 type Tracked = {
+  order_id: string
   order_number: string
   payment_status: string
   fulfillment_status: string
   total: number
   amount_paid: number
   balance: number
+  due_now: number
+  bank: { bank_name: string; account_name: string; account_number: string }
   courier_name: string | null
   tracking_number: string | null
   items: Item[]
@@ -50,12 +53,17 @@ export default function TrackPage() {
   const [order, setOrder] = useState<Tracked | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [receipt, setReceipt] = useState<File | null>(null)
+  const [paying, setPaying] = useState(false)
+  const [sent, setSent] = useState(false)
 
   async function track(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
     setOrder(null)
+    setReceipt(null)
+    setSent(false)
     try {
       const res = await fetch(
         `/api/track?order=${encodeURIComponent(orderNumber)}&phone=${encodeURIComponent(phone)}`
@@ -73,8 +81,36 @@ export default function TrackPage() {
     }
   }
 
+  async function pay() {
+    if (!order || !receipt) {
+      setError('Attach a screenshot of your transfer receipt first.')
+      return
+    }
+    setPaying(true)
+    setError('')
+    try {
+      const form = new FormData()
+      form.append('screenshot', receipt)
+      const res = await fetch(`/api/orders/${order.order_id}/payment`, {
+        method: 'POST',
+        body: form,
+      })
+      const d = await res.json()
+      if (!res.ok) {
+        setError(d.error || 'Could not send your receipt — please try again.')
+        return
+      }
+      setSent(true)
+    } catch {
+      setError('Something went wrong — please try again.')
+    } finally {
+      setPaying(false)
+    }
+  }
+
   const cancelled = order?.fulfillment_status === 'cancelled'
   const nextIndex = order ? STEPS.findIndex((s) => !isDone(s.key, order)) : -1
+  const bankReady = order?.bank.account_number && order?.bank.account_name
 
   return (
     <main className="mx-auto max-w-md px-5 py-16 md:px-12">
@@ -172,6 +208,66 @@ export default function TrackPage() {
               })}
             </ol>
           )}
+
+          {!cancelled && order.payment_status === 'pending' && (
+            <div className="mt-6 border border-vanilla-400 bg-vanilla-50 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-cherry-600">
+                Awaiting payment
+              </p>
+              {sent ? (
+                <p className="mt-2 text-sm text-ink">
+                  Payment sent. We’ll confirm it and move your order forward — usually within
+                  5–10 minutes.
+                </p>
+              ) : (
+                <>
+                  <p className="mt-2 text-sm text-ink">
+                    Pay{' '}
+                    <span className="font-semibold tabular-nums text-cherry-600">
+                      {formatNaira(order.due_now)}
+                    </span>{' '}
+                    to move your order forward.
+                  </p>
+                  {bankReady ? (
+                    <p className="mt-2 text-sm text-ink-muted">
+                      Transfer to{' '}
+                      <span className="font-semibold text-ink">{order.bank.account_number}</span> ·{' '}
+                      {order.bank.account_name} · {order.bank.bank_name}. Include{' '}
+                      <span className="font-semibold text-ink">{order.order_number}</span> in the
+                      narration.
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-sm text-ink-muted">
+                      Message us on WhatsApp for the account details.
+                    </p>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => setReceipt(e.target.files?.[0] || null)}
+                    className="mt-3 block w-full text-sm"
+                    aria-label="Transfer receipt"
+                  />
+                  <Button
+                    type="button"
+                    variant="primary"
+                    className="mt-3 h-12 w-full"
+                    loading={paying}
+                    onClick={pay}
+                  >
+                    I have made the payment
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+
+          {!cancelled && order.payment_status === 'confirmation_pending' && (
+            <p className="mt-6 rounded-[2px] bg-vanilla-200 px-4 py-3 text-sm text-ink">
+              Payment sent — we’re confirming it, usually within 5–10 minutes.
+            </p>
+          )}
+
           <ReviewCta />
         </div>
       )}

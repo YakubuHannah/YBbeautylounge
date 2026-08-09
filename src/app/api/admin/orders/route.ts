@@ -126,6 +126,14 @@ export async function PATCH(req: Request) {
         { status: 400 }
       )
     }
+    // Do not start fulfilling an order until a payment is confirmed. Cancelling
+    // an unpaid order is still allowed.
+    if (next !== 'cancelled' && !['partially_paid', 'paid'].includes(order.payment_status)) {
+      return NextResponse.json(
+        { error: 'Confirm a payment first — this order has no confirmed payment yet.' },
+        { status: 400 }
+      )
+    }
     // Dispatch is blocked in code while a balance is outstanding (§ never-negotiable 8).
     if (next === 'shipped' && order.amount_paid < order.total) {
       return NextResponse.json(

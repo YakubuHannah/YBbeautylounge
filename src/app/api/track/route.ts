@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { normalizePhone } from '@/lib/orders'
 import { prisma } from '@/lib/prisma'
+import { getSettingValue } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,13 +34,33 @@ export async function GET(req: Request) {
     )
   }
 
+  // Amount the customer would pay next (mirrors the payment-claim route).
+  const remaining = order.total - order.amount_paid
+  const goodsInstallment =
+    order.balance_due_amount != null ? order.total - order.balance_due_amount : order.total
+  const dueNow =
+    order.balance_due_amount == null
+      ? remaining
+      : remaining <= goodsInstallment + order.delivery_fee
+        ? remaining
+        : goodsInstallment
+
+  const [bankName, accountName, accountNumber] = await Promise.all([
+    getSettingValue('bank_name'),
+    getSettingValue('bank_account_name'),
+    getSettingValue('bank_account_number'),
+  ])
+
   return NextResponse.json({
+    order_id: order.id,
     order_number: order.order_number,
     payment_status: order.payment_status,
     fulfillment_status: order.fulfillment_status,
     total: order.total,
     amount_paid: order.amount_paid,
-    balance: order.total - order.amount_paid,
+    balance: remaining,
+    due_now: dueNow,
+    bank: { bank_name: bankName, account_name: accountName, account_number: accountNumber },
     courier_name: order.courier_name,
     tracking_number: order.tracking_number,
     items: order.items.map((it) => ({

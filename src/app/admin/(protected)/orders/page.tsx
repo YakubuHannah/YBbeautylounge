@@ -198,20 +198,32 @@ export default function AdminOrdersPage() {
                       Confirm {formatNaira(pendingPayment.amount)} received
                     </Button>
                   )}
-                  {(NEXT_FULFILLMENT[o.fulfillment_status] || []).map((next) => (
-                    <Button
-                      key={next}
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      loading={busy === o.id}
-                      onClick={() =>
-                        act(o.id, { action: 'update_fulfillment', fulfillment_status: next })
-                      }
-                    >
-                      Mark {next}
-                    </Button>
-                  ))}
+                  {(NEXT_FULFILLMENT[o.fulfillment_status] || [])
+                    .filter(
+                      (next) =>
+                        next === 'cancelled' ||
+                        ['partially_paid', 'paid'].includes(o.payment_status)
+                    )
+                    .map((next) => (
+                      <Button
+                        key={next}
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        loading={busy === o.id}
+                        onClick={() =>
+                          act(o.id, { action: 'update_fulfillment', fulfillment_status: next })
+                        }
+                      >
+                        Mark {next}
+                      </Button>
+                    ))}
+                  {!['partially_paid', 'paid'].includes(o.payment_status) &&
+                    o.fulfillment_status === 'unfulfilled' && (
+                      <span className="text-xs text-ink-muted">
+                        Confirm a payment before processing.
+                      </span>
+                    )}
                 </div>
               </section>
             )
